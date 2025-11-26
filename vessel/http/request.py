@@ -29,6 +29,7 @@ class HttpRequest:
         query_params: Optional[Dict[str, Any]] = None,
         body: Optional[Any] = None,
         path_params: Optional[Dict[str, str]] = None,
+        cookies: Optional[Dict[str, str]] = None,
     ):
         self.method = method
         self.path = path
@@ -36,6 +37,7 @@ class HttpRequest:
         self.query_params = query_params or {}
         self.body = body
         self.path_params = path_params or {}
+        self.cookies = cookies or {}
         self.context: Dict[str, Any] = {}  # 미들웨어/핸들러 간 데이터 공유용
 
     def get_header(self, key: str, default: Optional[str] = None) -> Optional[str]:

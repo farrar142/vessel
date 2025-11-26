@@ -5,6 +5,7 @@ RequestHandler - HTTP 요청 처리 로직 분리
 import logging
 from typing import TYPE_CHECKING, Optional, Callable, Dict
 from vessel.http.request import HttpRequest, HttpResponse
+from vessel.validation import ValidationError
 
 if TYPE_CHECKING:
     from vessel.web.middleware.chain import MiddlewareChain
@@ -102,6 +103,14 @@ class RequestHandler:
 
     def _handle_error(self, error: Exception, request: HttpRequest) -> HttpResponse:
         """에러 처리"""
+        # ValidationError 먼저 처리
+        if isinstance(error, ValidationError):
+            logger.info(f"Validation failed: {error.errors}")
+            return HttpResponse(
+                status_code=400,
+                body=error.to_dict(),
+            )
+
         # 등록된 에러 핸들러 확인
         for error_type, handler in self.error_handlers.items():
             if isinstance(error, error_type):

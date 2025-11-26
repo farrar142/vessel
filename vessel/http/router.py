@@ -2,12 +2,20 @@
 RouteHandler - HTTP 요청을 처리하고 핸들러 메서드를 실행
 """
 
-from typing import Any, Dict, List, Callable, Optional, Type
+from typing import Any, Dict, List, Callable, Optional, Type, get_origin, get_args
 import inspect
 from typing import get_type_hints
 
 from vessel.http.request import HttpRequest, HttpResponse
 from vessel.di.core.container_manager import ContainerManager
+from vessel.validation import ParameterValidator
+from vessel.http.parameter_injection import (
+    ParameterInjectorRegistry,
+    HttpRequestInjector,
+    HttpHeaderInjector,
+    HttpCookieInjector,
+    FileInjector,
+)
 
 
 class Route:
@@ -36,7 +44,16 @@ class RouteHandler:
     def __init__(self, container_manager: ContainerManager):
         self.container_manager = container_manager
         self.routes: List[Route] = []
+        self._setup_injector_registry()
         self._register_routes()
+
+    def _setup_injector_registry(self):
+        """파라미터 주입 레지스트리 설정"""
+        self.injector_registry = ParameterInjectorRegistry()
+        self.injector_registry.register(HttpRequestInjector())
+        self.injector_registry.register(HttpHeaderInjector())
+        self.injector_registry.register(HttpCookieInjector())
+        self.injector_registry.register(FileInjector())
 
     def _register_routes(self):
         """컨트롤러들에서 라우트 정보 수집"""
@@ -65,7 +82,9 @@ class RouteHandler:
                     # 핸들러 컨테이너가 있으면 인터셉터 적용
                     handler_to_use = attr
                     if hasattr(attr, "__pydi_container__"):
-                        from vessel.decorators.web.mapping import HttpMethodMappingHandler
+                        from vessel.decorators.web.mapping import (
+                            HttpMethodMappingHandler,
+                        )
 
                         container = attr.__pydi_container__
                         if (
@@ -176,97 +195,48 @@ class RouteHandler:
 
     def _invoke_handler(self, route: Route, request: HttpRequest) -> Any:
         """
-        핸들러 메서드를 실행하면서 파라미터에 값 주입
+        핸들러 메서드를 실행
+        - Registry 패턴으로 파라미터 주입 처리
+        - 일반 파라미터 validation
         """
         handler = route.handler
-        sig = inspect.signature(handler)
 
-        # 파라미터 분석 및 값 주입
-        kwargs = {}
+        # 요청 데이터 수집 (query, path, body)
+        request_data = self._collect_request_data(request)
 
+        # 타입 힌트 가져오기 (Annotated 타입 포함)
         try:
-            hints = get_type_hints(handler)
+            hints = get_type_hints(handler, include_extras=True)
         except:
             hints = {}
 
-        for param_name, param in sig.parameters.items():
-            if param_name == "self":
-                continue
+        # 레지스트리를 통한 파라미터 주입
+        kwargs = self.injector_registry.inject_parameters(
+            handler, request, request_data, hints
+        )
 
-            param_type = hints.get(param_name, param.annotation)
-
-            # HttpRequest 타입이면 request 객체 주입
-            if param_type == HttpRequest or param_type is inspect.Parameter.empty:
-                if param_name == "request":
-                    kwargs[param_name] = request
-                    continue
-
-            # 기본 타입 (str, int, float, bool) 처리
-            if param_type in (str, int, float, bool):
-                # query params에서 먼저 확인
-                if param_name in request.query_params:
-                    value = request.query_params[param_name]
-                # path params에서 확인
-                elif param_name in request.path_params:
-                    value = request.path_params[param_name]
-                # body에서 확인 (POST, PUT, PATCH)
-                elif (
-                    request.body
-                    and isinstance(request.body, dict)
-                    and param_name in request.body
-                ):
-                    value = request.body[param_name]
-                else:
-                    continue
-
-                # 타입 변환
-                try:
-                    if param_type == int:
-                        kwargs[param_name] = int(value)
-                    elif param_type == float:
-                        kwargs[param_name] = float(value)
-                    elif param_type == bool:
-                        kwargs[param_name] = (
-                            value
-                            if isinstance(value, bool)
-                            else value.lower() in ("true", "1", "yes")
-                        )
-                    else:
-                        kwargs[param_name] = str(value)
-                except:
-                    pass
-                continue
-
-            # Pydantic 모델이나 데이터 클래스인 경우
-            if inspect.isclass(param_type):
-                # BaseModel 체크 (pydantic)
-                if hasattr(param_type, "model_validate"):
-                    # Pydantic v2
-                    try:
-                        if request.body:
-                            kwargs[param_name] = param_type.model_validate(request.body)
-                        else:
-                            kwargs[param_name] = param_type.model_validate({})
-                    except:
-                        kwargs[param_name] = param_type()
-                elif hasattr(param_type, "parse_obj"):
-                    # Pydantic v1
-                    try:
-                        if request.body:
-                            kwargs[param_name] = param_type.parse_obj(request.body)
-                        else:
-                            kwargs[param_name] = param_type.parse_obj({})
-                    except:
-                        kwargs[param_name] = param_type()
-                else:
-                    # 일반 클래스는 인스턴스화 시도
-                    try:
-                        kwargs[param_name] = param_type()
-                    except:
-                        pass
+        # Validation 수행 (이미 주입된 파라미터는 제외)
+        skip_params = set(kwargs.keys())
+        validated_params = ParameterValidator.validate_and_convert(
+            handler, request_data, skip_params
+        )
+        kwargs.update(validated_params)
 
         # 핸들러 실행
         return handler(**kwargs)
+
+    def _collect_request_data(self, request: HttpRequest) -> Dict[str, Any]:
+        """요청 데이터 수집 (query, path, body)"""
+        request_data = {}
+        request_data.update(request.query_params)
+        request_data.update(request.path_params)
+
+        # body 데이터 수집 (파일 데이터도 포함)
+        if request.body and isinstance(request.body, dict):
+            for key, value in request.body.items():
+                request_data[key] = value
+
+        return request_data
 
     def get_all_routes(self) -> List[Dict[str, str]]:
         """등록된 모든 라우트 정보 반환"""

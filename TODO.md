@@ -1,388 +1,774 @@
-# Vessel Framework - Development Progress# Vessel Framework - Development Progress
+# Vessel Framework - Development Progress# Vessel Framework - Development Progress# Vessel Framework - Development Progress
 
 
 
-> Last Updated: 2025-11-26> Last Updated: 2025-11-26
+> Last Updated: 2025-11-26
 
 
 
-## 📋 목차## 📋 목차
+## 📋 목차> Last Updated: 2025-11-26> Last Updated: 2025-11-26
 
-1. [완료된 작업](#완료된-작업)1. [완료된 작업](#완료된-작업)
+1. [완료된 작업](#완료된-작업)
 
-2. [프로젝트 구조](#프로젝트-구조)2. [프로젝트 구조](#프로젝트-구조)
+2. [프로젝트 구조](#프로젝트-구조)
 
-3. [향후 개발 계획](#향후-개발-계획)3. [향후 개발 계획](#향후-개발-계획)
+3. [향후 개발 계획](#향후-개발-계획)
 
-4. [테스트 현황](#테스트-현황)
+4. [테스트 현황](#테스트-현황)## 📋 목차## 📋 목차
 
----
 
----
 
-# 완료된 작업
+---1. [완료된 작업](#완료된-작업)1. [완료된 작업](#완료된-작업)
 
-# 완료된 작업
 
-## ✅ 완료: Path Parameter 지원 추가
 
-## ✅ Phase 1: 핵심 DI 프레임워크 구축
+# 완료된 작업2. [프로젝트 구조](#프로젝트-구조)2. [프로젝트 구조](#프로젝트-구조)
 
-### 구현 내용
 
-### 1.1 Dependency Injection 시스템
 
-- ✅ **Container 시스템** - 컴포넌트 등록 및 관리1. **Path Parameter 패턴 매칭** (`vessel/http/route_handler.py`)
+## ✅ Phase 1: 핵심 DI 프레임워크 구축3. [향후 개발 계획](#향후-개발-계획)3. [향후 개발 계획](#향후-개발-계획)
 
-- ✅ **DependencyGraph** - 의존성 그래프 및 순환 의존성 감지   - `_match_path_pattern()`: `/users/{id}` 패턴이 `/users/123` 경로와 매칭
 
-- ✅ **ContainerManager** - DI 컨테이너 전체 관리   - `_extract_path_params()`: 경로에서 파라미터 값 추출 (`{id: "123"}`)
 
-- ✅ **타입 기반 자동 주입** - Type hints를 통한 자동 의존성 주입   - `find_route()`: 정확한 매칭 우선, path parameter 패턴 매칭 지원
+### 1.1 Dependency Injection 시스템4. [테스트 현황](#테스트-현황)
+
+- ✅ **Container 시스템** - 컴포넌트 등록 및 관리
+
+- ✅ **DependencyGraph** - 의존성 그래프 및 순환 의존성 감지---
+
+- ✅ **ContainerManager** - DI 컨테이너 전체 관리
+
+- ✅ **타입 기반 자동 주입** - Type hints를 통한 자동 의존성 주입---
 
 - ✅ **싱글톤 패턴** - 컴포넌트의 싱글톤 라이프사이클
 
-2. **파라미터 주입 개선** (`vessel/http/route_handler.py`)
+# 완료된 작업
 
-### 1.2 데코레이터 시스템   - 기본 타입(str, int, float, bool) 자동 변환
+### 1.2 데코레이터 시스템
+
+- ✅ **@Component** - 일반 컴포넌트 등록# 완료된 작업
+
+- ✅ **@Configuration** - 설정 클래스 마킹
+
+- ✅ **@Factory** - Factory 메서드 정의## ✅ 완료: Path Parameter 지원 추가
+
+- ✅ **@Controller** - 웹 컨트롤러 정의
+
+- ✅ **HTTP 메서드 데코레이터** - @Get, @Post, @Put, @Delete, @Patch## ✅ Phase 1: 핵심 DI 프레임워크 구축
+
+- ✅ **@overload 타입 힌트** - IDE 자동완성 개선
+
+### 구현 내용
+
+### 1.3 Interceptor 시스템
+
+- ✅ **HandlerContainer** - 인터셉터 체인 관리### 1.1 Dependency Injection 시스템
+
+- ✅ **HandlerInterceptor 인터페이스** - before/after/on_error 훅
+
+- ✅ **Built-in 인터셉터** - @Transaction, @Logging- ✅ **Container 시스템** - 컴포넌트 등록 및 관리1. **Path Parameter 패턴 매칭** (`vessel/http/route_handler.py`)
+
+- ✅ **DI 지원** - 인터셉터도 의존성 주입 가능
+
+- ✅ **DependencyGraph** - 의존성 그래프 및 순환 의존성 감지   - `_match_path_pattern()`: `/users/{id}` 패턴이 `/users/123` 경로와 매칭
+
+---
+
+- ✅ **ContainerManager** - DI 컨테이너 전체 관리   - `_extract_path_params()`: 경로에서 파라미터 값 추출 (`{id: "123"}`)
+
+## ✅ Phase 2: Web Framework 기능
+
+- ✅ **타입 기반 자동 주입** - Type hints를 통한 자동 의존성 주입   - `find_route()`: 정확한 매칭 우선, path parameter 패턴 매칭 지원
+
+### 2.1 HTTP 처리
+
+- ✅ **HttpRequest/HttpResponse** - HTTP 프로토콜 추상화- ✅ **싱글톤 패턴** - 컴포넌트의 싱글톤 라이프사이클
+
+- ✅ **RouteHandler** - 라우트 매칭 및 디스패칭
+
+- ✅ **Path Parameters** - `/users/{id}` 패턴 지원2. **파라미터 주입 개선** (`vessel/http/route_handler.py`)
+
+- ✅ **자동 타입 변환** - str, int, float, bool 자동 변환
+
+- ✅ **Query Parameters** - URL 쿼리 파라미터 파싱### 1.2 데코레이터 시스템   - 기본 타입(str, int, float, bool) 자동 변환
+
+- ✅ **Request Body** - JSON 요청 본문 파싱
 
 - ✅ **@Component** - 일반 컴포넌트 등록   - 우선순위: query_params → path_params → body
 
-- ✅ **@Configuration** - 설정 클래스 마킹   - Type hint 기반 자동 변환
+### 2.2 Middleware 시스템
 
-- ✅ **@Factory** - Factory 메서드 정의
+- ✅ **Middleware ABC** - 표준 미들웨어 인터페이스- ✅ **@Configuration** - 설정 클래스 마킹   - Type hint 기반 자동 변환
 
-- ✅ **@Controller** - 웹 컨트롤러 정의## ✅ 완료: MiddlewareChain 시스템 구현
+- ✅ **MiddlewareChain** - 미들웨어 체인 관리
 
-- ✅ **HTTP 메서드 데코레이터** - @Get, @Post, @Put, @Delete, @Patch
+- ✅ **그룹 기능** - 미들웨어를 그룹으로 관리- ✅ **@Factory** - Factory 메서드 정의
+
+- ✅ **Early Return** - 요청 처리 조기 종료 지원
+
+- ✅ **DI 지원** - 미들웨어도 의존성 주입 가능- ✅ **@Controller** - 웹 컨트롤러 정의## ✅ 완료: MiddlewareChain 시스템 구현
+
+- ✅ **Built-in 미들웨어**:
+
+  - CorsMiddleware - CORS 정책 설정- ✅ **HTTP 메서드 데코레이터** - @Get, @Post, @Put, @Delete, @Patch
+
+  - LoggingMiddleware - 요청/응답 로깅
 
 - ✅ **@overload 타입 힌트** - IDE 자동완성 개선### 구현된 기능
-
-
-
-### 1.3 Interceptor 시스템1. **Middleware ABC** (`vessel/web/middleware.py`)
-
-- ✅ **HandlerContainer** - 인터셉터 체인 관리   - `process_request(request)`: 요청 전처리, early return 가능
-
-- ✅ **HandlerInterceptor 인터페이스** - before/after/on_error 훅   - `process_response(request, response)`: 응답 후처리
-
-- ✅ **Built-in 인터셉터** - @Transaction, @Logging
-
-- ✅ **DI 지원** - 인터셉터도 의존성 주입 가능2. **MiddlewareChain** (`vessel/web/middleware.py`)
-
-   - 여러 미들웨어를 그룹으로 관리
-
----   - 그룹 추가: `add_group_before()` / `add_group_after()`
-
-   - 미들웨어 제어: `disable()` / `enable()`
-
-## ✅ Phase 2: Web Framework 기능   - 실행: `execute_request()` (early return 지원), `execute_response()` (역순)
-
-
-
-### 2.1 HTTP 처리3. **Built-in Middlewares** (`vessel/web/builtins.py`)
-
-- ✅ **HttpRequest/HttpResponse** - HTTP 프로토콜 추상화   - `CorsMiddleware`: CORS 정책 설정
-
-- ✅ **RouteHandler** - 라우트 매칭 및 디스패칭   - `LoggingMiddleware`: 요청/응답 로깅
-
-- ✅ **Path Parameters** - `/users/{id}` 패턴 지원   - `AuthenticationMiddleware`: 인증 처리 예제
-
-- ✅ **자동 타입 변환** - str, int, float, bool 자동 변환   - **@Component 제거**: Factory 패턴으로만 생성
-
-- ✅ **Query Parameters** - URL 쿼리 파라미터 파싱
-
-- ✅ **Request Body** - JSON 요청 본문 파싱4. **@Configuration 데코레이터** (`vessel/decorators/configuration.py`)
-
-   - Spring의 @Configuration과 유사한 패턴
-
-### 2.2 Middleware 시스템   - @Factory 메서드를 그룹핑하는 클래스 마커
-
-- ✅ **Middleware ABC** - 표준 미들웨어 인터페이스
-
-- ✅ **MiddlewareChain** - 미들웨어 체인 관리5. **Application 통합** (`vessel/web/application.py`)        cors.setAllowedMethods
-
-- ✅ **그룹 기능** - 미들웨어를 그룹으로 관리
-
-- ✅ **Early Return** - 요청 처리 조기 종료 지원   - `_detect_middleware_chain()`: 자동으로 MiddlewareChain 감지        cors.setAllowedOrigins
-
-- ✅ **DI 지원** - 미들웨어도 의존성 주입 가능
-
-- ✅ **Built-in 미들웨어**:   - `handle_request()`: MiddlewareChain을 통한 요청/응답 처리        cors.setAllowedHosts
-
-  - CorsMiddleware - CORS 정책 설정
-
-  - LoggingMiddleware - 요청/응답 로깅   - MiddlewareChain이 없으면 미들웨어 시스템 비활성화        return cors
-
-
 
 ### 2.3 Application 클래스
 
 - ✅ **Application (Facade 패턴)** - 사용자 친화적 API
 
-- ✅ **자동 초기화** - 패키지 스캐닝 및 컴포넌트 등록### 사용 예제
+- ✅ **자동 초기화** - 패키지 스캐닝 및 컴포넌트 등록
 
-- ✅ **에러 핸들러** - 사용자 정의 에러 처리
+- ✅ **에러 핸들러** - 사용자 정의 에러 처리### 1.3 Interceptor 시스템1. **Middleware ABC** (`vessel/web/middleware.py`)
 
-- ✅ **DevServer** - 개발용 WSGI 서버 내장```python
+- ✅ **DevServer** - 개발용 WSGI 서버 내장
 
-from vessel import (
+- ✅ **HandlerContainer** - 인터셉터 체인 관리   - `process_request(request)`: 요청 전처리, early return 가능
 
----    Component,
+---
 
-    Configuration,
+- ✅ **HandlerInterceptor 인터페이스** - before/after/on_error 훅   - `process_response(request, response)`: 응답 후처리
 
-## ✅ Phase 3: 코드 품질 개선    Factory,
+## ✅ Phase 3: 코드 품질 개선
 
-    Middleware,
+- ✅ **Built-in 인터셉터** - @Transaction, @Logging
 
-### 3.1 리팩토링: Application 클래스 분리 (SRP)    MiddlewareChain,
+### 3.1 리팩토링: Application 클래스 분리 (SRP)
 
-**단일 책임 원칙(Single Responsibility Principle) 적용**    CorsMiddleware,
+**단일 책임 원칙(Single Responsibility Principle) 적용**- ✅ **DI 지원** - 인터셉터도 의존성 주입 가능2. **MiddlewareChain** (`vessel/web/middleware.py`)
 
-)
 
-기존 문제점: Application 클래스가 너무 많은 책임 보유
 
-# 1. 커스텀 서비스
+**해결: 4개 클래스로 분리**   - 여러 미들웨어를 그룹으로 관리
 
-**해결: 4개 클래스로 분리**@Component
+1. **Application** (Facade) - 사용자 인터페이스
 
-1. **Application** (Facade) - 사용자 인터페이스class AuthService:
+2. **ApplicationInitializer** - DI 초기화 전담---   - 그룹 추가: `add_group_before()` / `add_group_after()`
 
-2. **ApplicationInitializer** - DI 초기화 전담    def validate_token(self, token: str) -> bool:
+3. **RequestHandler** - HTTP 요청 처리
 
-3. **RequestHandler** - HTTP 요청 처리        return token in {"token123"}
+4. **DevServer** - 개발 서버 실행   - 미들웨어 제어: `disable()` / `enable()`
 
-4. **DevServer** - 개발 서버 실행
 
-# 2. DI를 사용하는 미들웨어
 
-**효과:**@Component
+### 3.2 리팩토링: vessel/ 전체 디렉토리 구조 개편## ✅ Phase 2: Web Framework 기능   - 실행: `execute_request()` (early return 지원), `execute_response()` (역순)
 
-- 각 클래스가 명확한 단일 책임class CustomAuthMiddleware(Middleware):
 
-- 테스트 가능성 향상    auth_service: AuthService  # DI로 주입됨
 
-- 유지보수성 개선    
+**개선된 구조:**
 
-    def process_request(self, request):
+- `vessel/di/` - DI 시스템 (core + utils)
 
-### 3.2 리팩토링: vessel/ 전체 디렉토리 구조 개편        token = request.headers.get("Authorization", "")[7:]
+- `vessel/decorators/` - 데코레이터 (di + web + handler)### 2.1 HTTP 처리3. **Built-in Middlewares** (`vessel/web/builtins.py`)
 
-        
+- `vessel/http/` - HTTP 프로토콜
 
-**기존 구조 (혼재):**        if not self.auth_service.validate_token(token):
+- `vessel/web/` - Application 레이어 + middleware- ✅ **HttpRequest/HttpResponse** - HTTP 프로토콜 추상화   - `CorsMiddleware`: CORS 정책 설정
 
-```            # early return - 인증 실패
 
-vessel/            return HttpResponse(status_code=403, body={"error": "Invalid"})
 
-├── core/           # DI + 기타 혼재        
+**문서화:**- ✅ **RouteHandler** - 라우트 매칭 및 디스패칭   - `LoggingMiddleware`: 요청/응답 로깅
 
-├── decorators/     # 모든 데코레이터가 한 곳에        return None  # 다음으로 진행
+- `RESTRUCTURE_PLAN.md` - 구조 개편 계획
 
-├── http/           # HTTP + Mapping 혼재    
+- `STRUCTURE.md` - 새로운 구조 가이드- ✅ **Path Parameters** - `/users/{id}` 패턴 지원   - `AuthenticationMiddleware`: 인증 처리 예제
 
-└── web/            # Application + Middleware 평면    def process_response(self, request, response):
 
-```        return response
 
+### 3.3 리팩토링: vessel/di 내부 구조화- ✅ **자동 타입 변환** - str, int, float, bool 자동 변환   - **@Component 제거**: Factory 패턴으로만 생성
 
 
-**개선된 구조 (기능별 분리):**# 3. @Configuration으로 MiddlewareChain 구성
 
-```@Configuration
+- **vessel/di/core/** - Container, ContainerManager, DependencyGraph- ✅ **Query Parameters** - URL 쿼리 파라미터 파싱
 
-vessel/class MiddlewareConfig:
+- **vessel/di/utils/** - Scanner, Collector, Initializer, Analyzer, Resolver
 
-├── di/    @Factory
+- ✅ **Request Body** - JSON 요청 본문 파싱4. **@Configuration 데코레이터** (`vessel/decorators/configuration.py`)
 
-│   ├── core/       # 핵심 DI 컴포넌트    def cors_middleware(self) -> CorsMiddleware:
+---
 
-│   └── utils/      # DI 유틸리티        cors = CorsMiddleware()
+   - Spring의 @Configuration과 유사한 패턴
 
-├── decorators/        cors.set_allowed_origins("http://localhost:3000")
+# 프로젝트 구조
 
-│   ├── di/         # DI 데코레이터        cors.set_allowed_methods("GET", "POST")
-
-│   ├── web/        # Web 데코레이터        return cors
-
-│   └── handler/    # Interceptor 데코레이터    
-
-├── http/           # HTTP 프로토콜 레이어    @Factory
-
-└── web/            # Application 레이어    def middleware_chain(
-
-    └── middleware/ # 미들웨어 시스템        self,
-
-```        auth: CustomAuthMiddleware,
-
-        cors: CorsMiddleware,
-
-**주요 변경:**    ) -> MiddlewareChain:
-
-- 11개 파일 이동/이름 변경        chain = MiddlewareChain()
-
-- 8개 `__init__.py` 생성        default_group = chain.get_default_group()
-
-- 100+ import 경로 업데이트        default_group.add(cors)
-
-- 하위 호환성 유지 (re-export)        default_group.add(auth)
-
-        return chain
-
-**문서화:**
-
-- `RESTRUCTURE_PLAN.md` - 구조 개편 계획# 4. Application 실행
-
-- `STRUCTURE.md` - 새로운 구조 가이드app = Application("__main__", debug=True)
-
-app.initialize()  # 자동으로 MiddlewareChain 감지
-
-### 3.3 리팩토링: vessel/di 내부 구조화```
-
-
-
-**vessel/di를 core와 utils로 분리**### 주요 특징
-
-
-
-- **vessel/di/core/** - 핵심 DI 컴포넌트✅ **DI 지원**: Middleware가 다른 컴포넌트를 의존성으로 주입받을 수 있음
-
-  - Container, ContainerManager, DependencyGraph✅ **Early Return**: `process_request()`에서 응답을 반환하면 라우트 핸들러 스킵
-
-  ✅ **그룹 관리**: 여러 미들웨어를 그룹으로 묶고 순서 제어 가능
-
-- **vessel/di/utils/** - DI 유틸리티✅ **자동 감지**: Application이 MiddlewareChain을 DI 컨테이너에서 자동 탐지
-
-  - PackageScanner, ContainerCollector, ComponentInitializer✅ **Factory 패턴**: Built-in middleware는 @Factory로 생성 (메서드가 정해져 있으므로)
-
-  - DependencyAnalyzer, InterceptorResolver✅ **Path Parameter**: `@Get("/{id}")`와 같은 경로 파라미터 지원 및 자동 타입 변환
-
-
-
-**효과:**## ✅ 완료: 레거시 코드 제거
-
-- 핵심 기능과 지원 기능 명확히 구분
-
-- 모듈 간 책임 분리### 제거된 항목
-
-- 하위 호환성 유지
-
-1. **Application 클래스**
-
----   - `self.middlewares` 리스트 제거
-
-   - `add_middleware()` 메서드 제거
-
-# 프로젝트 구조   - `_execute_middlewares()` 메서드 제거
-
-   - MiddlewareChain만 사용
+### 2.2 Middleware 시스템   - @Factory 메서드를 그룹핑하는 클래스 마커
 
 ## 📁 최종 디렉토리 구조
 
-2. **테스트 파일**
+- ✅ **Middleware ABC** - 표준 미들웨어 인터페이스
 
-```   - 레거시 middleware 테스트 제거
+```
 
-vessel/   - 모든 테스트 통과 (60/60)
+vessel/- ✅ **MiddlewareChain** - 미들웨어 체인 관리5. **Application 통합** (`vessel/web/application.py`)        cors.setAllowedMethods
 
-├── __init__.py                      # 메인 export
+├── __init__.py
 
-│3. **예제 파일**
+│- ✅ **그룹 기능** - 미들웨어를 그룹으로 관리
 
-├── di/                              # ✨ DI (Dependency Injection)   - examples/ 폴더 완전 삭제
+├── di/                              # ✨ DI (Dependency Injection)
 
-│   ├── __init__.py
+│   ├── __init__.py- ✅ **Early Return** - 요청 처리 조기 종료 지원   - `_detect_middleware_chain()`: 자동으로 MiddlewareChain 감지        cors.setAllowedOrigins
 
-│   ├── core/                        # 핵심 DI 컴포넌트## 테스트 현황
+│   ├── core/                        # 핵심 DI 컴포넌트
 
-│   │   ├── __init__.py
+│   │   ├── __init__.py- ✅ **DI 지원** - 미들웨어도 의존성 주입 가능
 
-│   │   ├── container.py             # Container, ContainerHolder**전체 테스트: 60개**
+│   │   ├── container.py
 
-│   │   ├── container_manager.py     # ContainerManager- ✅ test_application.py: 12/12 통과
+│   │   ├── container_manager.py- ✅ **Built-in 미들웨어**:   - `handle_request()`: MiddlewareChain을 통한 요청/응답 처리        cors.setAllowedHosts
 
-│   │   └── dependency.py            # DependencyGraph- ✅ test_component.py: 5/5 통과
+│   │   └── dependency.py
 
-│   └── utils/                       # DI 유틸리티- ✅ test_container.py: 4/4 통과
+│   └── utils/                       # DI 유틸리티  - CorsMiddleware - CORS 정책 설정
 
-│       ├── __init__.py- ✅ test_dependency.py: 9/9 통과
+│       ├── __init__.py
 
-│       ├── package_scanner.py       # 패키지 스캐닝- ✅ test_handler.py: 14/14 통과
+│       ├── package_scanner.py  - LoggingMiddleware - 요청/응답 로깅   - MiddlewareChain이 없으면 미들웨어 시스템 비활성화        return cors
 
-│       ├── container_collector.py   # 컨테이너 수집- ✅ test_integration.py: 7/7 통과
+│       ├── container_collector.py
 
-│       ├── component_initializer.py # 컴포넌트 초기화- ✅ test_integration_advanced.py: 5/5 통과
+│       ├── component_initializer.py
 
-│       ├── dependency_analyzer.py   # 의존성 분석- ✅ test_middleware_integration.py: 4/4 통과
+│       ├── dependency_analyzer.py
 
-│       └── interceptor_resolver.py  # 인터셉터 해결
-
-│**결과: 100% 통과 (60/60)** ✨
-
-├── decorators/                      # 🎨 데코레이터
-
-│   ├── __init__.py---
-
-│   ├── di/                          # DI 데코레이터
-
-│   │   ├── __init__.py## ✅ 완료: Type Overloading 추가
-
-│   │   ├── component.py             # @Component
-
-│   │   ├── configuration.py         # @Configuration### 구현 내용
-
-│   │   └── factory.py               # @Factory
-
-│   ├── web/                         # Web 데코레이터**HTTP 메서드 데코레이터에 @overload 추가** (`vessel/decorators/web/mapping.py`)
-
-│   │   ├── __init__.py- IDE 자동완성 개선: 함수/메서드 구분
-
-│   │   ├── controller.py            # @Controller, @RequestMapping- 2가지 시그니처:
-
-│   │   └── mapping.py               # @Get, @Post, @Put, @Delete, @Patch  1. `@Get` - 인자 없이 함수에 직접 사용
-
-│   └── handler/                     # Handler/Interceptor  2. `@Get(path)` - 경로 지정 후 함수에 사용
-
-│       ├── __init__.py- 적용 데코레이터: `@Get`, `@Post`, `@Put`, `@Delete`, `@Patch`
-
-│       └── handler.py               # HandlerContainer, Interceptors
-
-│---
-
-├── http/                            # 🌐 HTTP 프로토콜 레이어
-
-│   ├── __init__.py## ✅ 완료: Application 클래스 리팩토링 (SRP)
-
-│   ├── request.py                   # HttpRequest, HttpResponse
-
-│   └── router.py                    # RouteHandler, Route 매칭### 단일 책임 원칙(SRP) 적용
+│       └── interceptor_resolver.py### 2.3 Application 클래스
 
 │
 
+├── decorators/                      # 🎨 데코레이터- ✅ **Application (Facade 패턴)** - 사용자 친화적 API
+
+│   ├── __init__.py
+
+│   ├── di/                          # DI 데코레이터- ✅ **자동 초기화** - 패키지 스캐닝 및 컴포넌트 등록### 사용 예제
+
+│   │   ├── __init__.py
+
+│   │   ├── component.py- ✅ **에러 핸들러** - 사용자 정의 에러 처리
+
+│   │   ├── configuration.py
+
+│   │   └── factory.py- ✅ **DevServer** - 개발용 WSGI 서버 내장```python
+
+│   ├── web/                         # Web 데코레이터
+
+│   │   ├── __init__.pyfrom vessel import (
+
+│   │   ├── controller.py
+
+│   │   └── mapping.py---    Component,
+
+│   └── handler/                     # Handler/Interceptor
+
+│       ├── __init__.py    Configuration,
+
+│       └── handler.py
+
+│## ✅ Phase 3: 코드 품질 개선    Factory,
+
+├── http/                            # 🌐 HTTP 프로토콜 레이어
+
+│   ├── __init__.py    Middleware,
+
+│   ├── request.py
+
+│   └── router.py### 3.1 리팩토링: Application 클래스 분리 (SRP)    MiddlewareChain,
+
+│
+
+└── web/                             # 🚀 Web Application 레이어**단일 책임 원칙(Single Responsibility Principle) 적용**    CorsMiddleware,
+
+    ├── __init__.py
+
+    ├── application.py)
+
+    ├── initializer.py
+
+    ├── request_handler.py기존 문제점: Application 클래스가 너무 많은 책임 보유
+
+    ├── server.py
+
+    └── middleware/                  # 🔗 미들웨어# 1. 커스텀 서비스
+
+        ├── __init__.py
+
+        ├── chain.py**해결: 4개 클래스로 분리**@Component
+
+        └── builtins.py
+
+```1. **Application** (Facade) - 사용자 인터페이스class AuthService:
+
+
+
+---2. **ApplicationInitializer** - DI 초기화 전담    def validate_token(self, token: str) -> bool:
+
+
+
+# 향후 개발 계획3. **RequestHandler** - HTTP 요청 처리        return token in {"token123"}
+
+
+
+## 🚀 Phase 4: 핵심 기능 강화 (우선순위: 높음)4. **DevServer** - 개발 서버 실행
+
+
+
+### 4.1 DI 기능 개선# 2. DI를 사용하는 미들웨어
+
+
+
+#### Constructor Injection 지원**효과:**@Component
+
+```python
+
+@Component- 각 클래스가 명확한 단일 책임class CustomAuthMiddleware(Middleware):
+
+class UserService:
+
+    def __init__(self, user_repo: UserRepository):- 테스트 가능성 향상    auth_service: AuthService  # DI로 주입됨
+
+        self.user_repo = user_repo  # 자동 주입
+
+```- 유지보수성 개선    
+
+
+
+#### Lazy Initialization    def process_request(self, request):
+
+```python
+
+@Component(lazy=True)### 3.2 리팩토링: vessel/ 전체 디렉토리 구조 개편        token = request.headers.get("Authorization", "")[7:]
+
+class HeavyService:
+
+    pass  # 첫 사용 시점에 초기화        
+
+```
+
+**기존 구조 (혼재):**        if not self.auth_service.validate_token(token):
+
+#### Scope 확장
+
+```python```            # early return - 인증 실패
+
+@Component(scope="prototype")  # 매번 새 인스턴스
+
+class RequestContext:vessel/            return HttpResponse(status_code=403, body={"error": "Invalid"})
+
+    pass
+
+```├── core/           # DI + 기타 혼재        
+
+
+
+#### Qualifier 지원├── decorators/     # 모든 데코레이터가 한 곳에        return None  # 다음으로 진행
+
+```python
+
+@Component(name="mysql_db")├── http/           # HTTP + Mapping 혼재    
+
+class MySQLDatabase(Database):
+
+    pass└── web/            # Application + Middleware 평면    def process_response(self, request, response):
+
+
+
+@Component```        return response
+
+class UserService:
+
+    db: Database = Inject(name="mysql_db")
+
+```
+
+**개선된 구조 (기능별 분리):**# 3. @Configuration으로 MiddlewareChain 구성
+
+### 4.2 Web 기능 확장
+
+```@Configuration
+
+#### 요청 바디 검증 (Validation)
+
+```pythonvessel/class MiddlewareConfig:
+
+from pydantic import BaseModel
+
+├── di/    @Factory
+
+class CreateUserRequest(BaseModel):
+
+    username: str│   ├── core/       # 핵심 DI 컴포넌트    def cors_middleware(self) -> CorsMiddleware:
+
+    email: str
+
+│   └── utils/      # DI 유틸리티        cors = CorsMiddleware()
+
+@Post("/users")
+
+def create_user(req: CreateUserRequest):├── decorators/        cors.set_allowed_origins("http://localhost:3000")
+
+    pass  # 자동 검증
+
+```│   ├── di/         # DI 데코레이터        cors.set_allowed_methods("GET", "POST")
+
+
+
+#### 파일 업로드 지원│   ├── web/        # Web 데코레이터        return cors
+
+```python
+
+@Post("/upload")│   └── handler/    # Interceptor 데코레이터    
+
+def upload_file(request: HttpRequest):
+
+    file = request.files['file']├── http/           # HTTP 프로토콜 레이어    @Factory
+
+    file.save('/uploads/' + file.filename)
+
+```└── web/            # Application 레이어    def middleware_chain(
+
+
+
+#### 정적 파일 서빙    └── middleware/ # 미들웨어 시스템        self,
+
+```python
+
+app.serve_static("/static", "./public")```        auth: CustomAuthMiddleware,
+
+```
+
+        cors: CorsMiddleware,
+
+#### 템플릿 엔진 통합
+
+```python**주요 변경:**    ) -> MiddlewareChain:
+
+@Get("/users")
+
+def list_users():- 11개 파일 이동/이름 변경        chain = MiddlewareChain()
+
+    return render_template("users.html", users=users)
+
+```- 8개 `__init__.py` 생성        default_group = chain.get_default_group()
+
+
+
+### 4.3 미들웨어 확장- 100+ import 경로 업데이트        default_group.add(cors)
+
+
+
+- [ ] CompressionMiddleware- 하위 호환성 유지 (re-export)        default_group.add(auth)
+
+- [ ] RateLimitMiddleware
+
+- [ ] SessionMiddleware        return chain
+
+- [ ] SecurityHeadersMiddleware
+
+- [ ] 미들웨어 우선순위 지원**문서화:**
+
+
+
+---- `RESTRUCTURE_PLAN.md` - 구조 개편 계획# 4. Application 실행
+
+
+
+## 🔧 Phase 5: 개발 편의성 (우선순위: 중간)- `STRUCTURE.md` - 새로운 구조 가이드app = Application("__main__", debug=True)
+
+
+
+### 5.1 CLI 도구app.initialize()  # 자동으로 MiddlewareChain 감지
+
+```bash
+
+vessel create my-project### 3.3 리팩토링: vessel/di 내부 구조화```
+
+vessel new controller UserController
+
+vessel new component UserService
+
+```
+
+**vessel/di를 core와 utils로 분리**### 주요 특징
+
+### 5.2 개발 서버 개선
+
+- Hot Reload (파일 변경 감지)
+
+- 에러 페이지 개선
+
+- 로깅 개선- **vessel/di/core/** - 핵심 DI 컴포넌트✅ **DI 지원**: Middleware가 다른 컴포넌트를 의존성으로 주입받을 수 있음
+
+
+
+### 5.3 디버깅 도구  - Container, ContainerManager, DependencyGraph✅ **Early Return**: `process_request()`에서 응답을 반환하면 라우트 핸들러 스킵
+
+- DI 컨테이너 Inspector
+
+- Health Check Endpoint  ✅ **그룹 관리**: 여러 미들웨어를 그룹으로 묶고 순서 제어 가능
+
+
+
+### 5.4 테스트 지원- **vessel/di/utils/** - DI 유틸리티✅ **자동 감지**: Application이 MiddlewareChain을 DI 컨테이너에서 자동 탐지
+
+```python
+
+@WebTest  - PackageScanner, ContainerCollector, ComponentInitializer✅ **Factory 패턴**: Built-in middleware는 @Factory로 생성 (메서드가 정해져 있으므로)
+
+class TestUserController:
+
+    def test_create_user(self, client):  - DependencyAnalyzer, InterceptorResolver✅ **Path Parameter**: `@Get("/{id}")`와 같은 경로 파라미터 지원 및 자동 타입 변환
+
+        response = client.post("/users", json={...})
+
+```
+
+
+
+---**효과:**## ✅ 완료: 레거시 코드 제거
+
+
+
+## 📦 Phase 6: 프로덕션 준비 (우선순위: 낮음)- 핵심 기능과 지원 기능 명확히 구분
+
+
+
+### 6.1 성능 최적화- 모듈 간 책임 분리### 제거된 항목
+
+- 비동기 지원 (asyncio)
+
+- 캐싱 (@Cacheable)- 하위 호환성 유지
+
+
+
+### 6.2 보안1. **Application 클래스**
+
+- 인증/인가 (@Secured, JWT)
+
+- CSRF 보호---   - `self.middlewares` 리스트 제거
+
+
+
+### 6.3 모니터링   - `add_middleware()` 메서드 제거
+
+- 메트릭 수집 (Prometheus)
+
+- 구조화된 로깅 (structlog)# 프로젝트 구조   - `_execute_middlewares()` 메서드 제거
+
+
+
+---   - MiddlewareChain만 사용
+
+
+
+## 🌐 Phase 7: 생태계 확장 (우선순위: 낮음)## 📁 최종 디렉토리 구조
+
+
+
+### 7.1 ORM 통합2. **테스트 파일**
+
+- SQLAlchemy (@Repository)
+
+- 데이터베이스 마이그레이션 (Alembic)```   - 레거시 middleware 테스트 제거
+
+
+
+### 7.2 메시징vessel/   - 모든 테스트 통과 (60/60)
+
+- RabbitMQ/Kafka (@MessageListener)
+
+├── __init__.py                      # 메인 export
+
+### 7.3 외부 서비스 통합
+
+- HTTP Client (@HttpClient)│3. **예제 파일**
+
+
+
+---├── di/                              # ✨ DI (Dependency Injection)   - examples/ 폴더 완전 삭제
+
+
+
+# 테스트 현황│   ├── __init__.py
+
+
+
+## 📊 현재 테스트 커버리지│   ├── core/                        # 핵심 DI 컴포넌트## 테스트 현황
+
+
+
+**전체 테스트: 60개** ✅│   │   ├── __init__.py
+
+
+
+| 테스트 파일 | 테스트 수 | 상태 |│   │   ├── container.py             # Container, ContainerHolder**전체 테스트: 60개**
+
+|------------|----------|------|
+
+| test_application.py | 12 | ✅ |│   │   ├── container_manager.py     # ContainerManager- ✅ test_application.py: 12/12 통과
+
+| test_component.py | 5 | ✅ |
+
+| test_container.py | 4 | ✅ |│   │   └── dependency.py            # DependencyGraph- ✅ test_component.py: 5/5 통과
+
+| test_dependency.py | 9 | ✅ |
+
+| test_handler.py | 14 | ✅ |│   └── utils/                       # DI 유틸리티- ✅ test_container.py: 4/4 통과
+
+| test_integration.py | 7 | ✅ |
+
+| test_integration_advanced.py | 5 | ✅ |│       ├── __init__.py- ✅ test_dependency.py: 9/9 통과
+
+| test_middleware_integration.py | 4 | ✅ |
+
+│       ├── package_scanner.py       # 패키지 스캐닝- ✅ test_handler.py: 14/14 통과
+
+**결과: 100% 통과 (60/60)** 🎉
+
+│       ├── container_collector.py   # 컨테이너 수집- ✅ test_integration.py: 7/7 통과
+
+## Phase 4 테스트 목표
+
+│       ├── component_initializer.py # 컴포넌트 초기화- ✅ test_integration_advanced.py: 5/5 통과
+
+- [ ] Constructor Injection 테스트 (+5)
+
+- [ ] Lazy Initialization 테스트 (+3)│       ├── dependency_analyzer.py   # 의존성 분석- ✅ test_middleware_integration.py: 4/4 통과
+
+- [ ] Scope 테스트 (+5)
+
+- [ ] Qualifier 테스트 (+3)│       └── interceptor_resolver.py  # 인터셉터 해결
+
+- [ ] Validation 테스트 (+5)
+
+- [ ] File Upload 테스트 (+3)│**결과: 100% 통과 (60/60)** ✨
+
+
+
+**총 목표: 84개 테스트**├── decorators/                      # 🎨 데코레이터
+
+
+
+---│   ├── __init__.py---
+
+
+
+# 기술 스택│   ├── di/                          # DI 데코레이터
+
+
+
+## 현재 사용 중│   │   ├── __init__.py## ✅ 완료: Type Overloading 추가
+
+- Python 3.12+
+
+- 표준 라이브러리 (typing, inspect, importlib, wsgiref)│   │   ├── component.py             # @Component
+
+- pytest, pytest-cov
+
+│   │   ├── configuration.py         # @Configuration### 구현 내용
+
+## 향후 도입 예정
+
+- Pydantic (Validation)│   │   └── factory.py               # @Factory
+
+- Click/Typer (CLI)
+
+- watchdog (Hot Reload)│   ├── web/                         # Web 데코레이터**HTTP 메서드 데코레이터에 @overload 추가** (`vessel/decorators/web/mapping.py`)
+
+- asyncio, uvicorn (Async)
+
+- Redis (Cache)│   │   ├── __init__.py- IDE 자동완성 개선: 함수/메서드 구분
+
+- SQLAlchemy (ORM)
+
+- structlog (Logging)│   │   ├── controller.py            # @Controller, @RequestMapping- 2가지 시그니처:
+
+
+
+---│   │   └── mapping.py               # @Get, @Post, @Put, @Delete, @Patch  1. `@Get` - 인자 없이 함수에 직접 사용
+
+
+
+# 기여 가이드│   └── handler/                     # Handler/Interceptor  2. `@Get(path)` - 경로 지정 후 함수에 사용
+
+
+
+## 개발 환경 설정│       ├── __init__.py- 적용 데코레이터: `@Get`, `@Post`, `@Put`, `@Delete`, `@Patch`
+
+
+
+```bash│       └── handler.py               # HandlerContainer, Interceptors
+
+# 1. 가상환경 생성
+
+python -m venv venv│---
+
+source venv/bin/activate
+
+├── http/                            # 🌐 HTTP 프로토콜 레이어
+
+# 2. 의존성 설치
+
+pip install pytest pytest-cov│   ├── __init__.py## ✅ 완료: Application 클래스 리팩토링 (SRP)
+
+
+
+# 3. 테스트 실행│   ├── request.py                   # HttpRequest, HttpResponse
+
+pytest
+
+│   └── router.py                    # RouteHandler, Route 매칭### 단일 책임 원칙(SRP) 적용
+
+# 4. 커버리지 확인
+
+pytest --cov=vessel --cov-report=html│
+
+```
+
 └── web/                             # 🚀 Web Application 레이어**기존 문제점:**
+
+## 커밋 메시지 규칙
 
     ├── __init__.py- Application 클래스가 너무 많은 책임을 가짐
 
-    ├── application.py               # Application (Facade)- 초기화, 요청 처리, 서버 실행이 하나의 클래스에 혼재
+```
 
-    ├── initializer.py               # ApplicationInitializer
+<type>: <subject>    ├── application.py               # Application (Facade)- 초기화, 요청 처리, 서버 실행이 하나의 클래스에 혼재
+
+
+
+<body>    ├── initializer.py               # ApplicationInitializer
+
+```
 
     ├── request_handler.py           # RequestHandler**해결책: 4개 클래스로 분리** (`vessel/web/`)
 
-    ├── server.py                    # DevServer
+**Types:**
 
-    └── middleware/                  # 🔗 미들웨어1. **Application (Facade)** - `application.py`
+- `feat`: 새로운 기능    ├── server.py                    # DevServer
 
-        ├── __init__.py   - 사용자 인터페이스 제공
+- `fix`: 버그 수정
+
+- `refactor`: 리팩토링    └── middleware/                  # 🔗 미들웨어1. **Application (Facade)** - `application.py`
+
+- `test`: 테스트 추가/수정
+
+- `docs`: 문서 수정        ├── __init__.py   - 사용자 인터페이스 제공
+
+- `chore`: 빌드, 설정 등
 
         ├── chain.py                 # MiddlewareChain, Middleware   - 다른 클래스들을 조합하여 간단한 API 제공
 
+---
+
         └── builtins.py              # CorsMiddleware, LoggingMiddleware   - `initialize()`, `handle_request()`, `run()` 등
 
-```
+**마지막 업데이트: 2025-11-26**  
+
+**버전: 0.1.0-alpha**  ```
+
+**상태: 활발히 개발 중** 🚧
 
 2. **ApplicationInitializer** - `initializer.py`
 

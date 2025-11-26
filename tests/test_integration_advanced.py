@@ -58,7 +58,7 @@ class TestDecoratorFactoryIntegration:
         assert len(logger.logs) == 0  # 아직 핸들러 실행 전
 
         # RouteHandler를 통해 핸들러 실행 - 인터셉터가 실제로 동작
-        from vessel.http.route_handler import RouteHandler
+        from vessel.http.router import RouteHandler
         from vessel.http.request import HttpRequest
 
         route_handler = RouteHandler(manager)
@@ -133,7 +133,7 @@ class TestDecoratorFactoryIntegration:
         assert service_b.count == 0
 
         # RouteHandler를 통해 핸들러 실행 - 인터셉터들이 실제로 동작
-        from vessel.http.route_handler import RouteHandler
+        from vessel.http.router import RouteHandler
         from vessel.http.request import HttpRequest
 
         route_handler = RouteHandler(manager)
@@ -190,7 +190,7 @@ class TestDecoratorFactoryIntegration:
         assert interceptor_instance.call_count == 0
 
         # RouteHandler를 통해 핸들러 실행 - 인터셉터가 실제로 동작
-        from vessel.http.route_handler import RouteHandler
+        from vessel.http.router import RouteHandler
         from vessel.http.request import HttpRequest
 
         route_handler = RouteHandler(manager)
@@ -259,7 +259,7 @@ class TestDecoratorFactoryIntegration:
         assert simple_call_count == 0
 
         # RouteHandler를 통해 핸들러 실행 - 두 인터셉터가 모두 동작
-        from vessel.http.route_handler import RouteHandler
+        from vessel.http.router import RouteHandler
         from vessel.http.request import HttpRequest
 
         route_handler = RouteHandler(manager)
@@ -301,7 +301,7 @@ class TestHTTPIntegration:
         manager.component_scan("__main__")
         manager.initialize()
 
-        from vessel.http.route_handler import RouteHandler
+        from vessel.http.router import RouteHandler
 
         route_handler = RouteHandler(manager)
 

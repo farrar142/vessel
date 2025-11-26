@@ -3,7 +3,7 @@
 """
 
 from typing import Type, TypeVar, Optional, Any, Callable
-from vessel.core.container import Container, ContainerType, register_container
+from vessel.di.container import Container, ContainerType, register_container
 
 T = TypeVar("T")
 

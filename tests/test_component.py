@@ -3,7 +3,7 @@ Unit Tests for Component decorator
 """
 
 import pytest
-from vessel.decorators.component import Component, ComponentContainer
+from vessel.decorators.di.component import Component, ComponentContainer
 
 
 class TestComponent:

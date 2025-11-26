@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING, Optional, Callable, Dict
 from vessel.http.request import HttpRequest, HttpResponse
 
 if TYPE_CHECKING:
-    from vessel.web.middleware import MiddlewareChain
-    from vessel.http.route_handler import RouteHandler
+    from vessel.web.middleware.chain import MiddlewareChain
+    from vessel.http.router import RouteHandler
 
 logger = logging.getLogger(__name__)
 

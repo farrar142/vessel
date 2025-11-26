@@ -9,9 +9,9 @@ Vessel Web Module - 웹 애플리케이션 프레임워크
 """
 
 from vessel.web.application import Application, create_app
-from vessel.web.app_initializer import ApplicationInitializer
+from vessel.web.initializer import ApplicationInitializer
 from vessel.web.request_handler import RequestHandler
-from vessel.web.dev_server import DevServer
+from vessel.web.server import DevServer
 
 __all__ = [
     "Application",

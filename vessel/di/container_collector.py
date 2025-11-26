@@ -3,7 +3,7 @@ ContainerCollector - 컨테이너 수집 책임
 """
 
 from typing import Any, Dict, List, Type
-from vessel.core.container import (
+from vessel.di.container import (
     get_all_registered_targets,
     get_container_holder,
     register_container,
@@ -24,10 +24,10 @@ class ContainerCollector:
             (components, controllers, factories) 튜플
         """
         # 런타임에 import하여 순환 import 방지
-        from vessel.decorators.component import ComponentContainer
-        from vessel.decorators.factory import FactoryContainer
-        from vessel.decorators.controller import ControllerContainer
-        from vessel.decorators.configuration import ConfigurationContainer
+        from vessel.decorators.di.component import ComponentContainer
+        from vessel.decorators.di.factory import FactoryContainer
+        from vessel.decorators.web.controller import ControllerContainer
+        from vessel.decorators.di.configuration import ConfigurationContainer
 
         components: Dict[Type, Any] = {}
         controllers: Dict[Type, Any] = {}
@@ -71,7 +71,7 @@ class ContainerCollector:
             factories: 팩토리 딕셔너리 (수정됨)
         """
         # 런타임에 import하여 순환 import 방지
-        from vessel.decorators.factory import FactoryContainer
+        from vessel.decorators.di.factory import FactoryContainer
 
         for component_class in components.keys():
             for attr_name in dir(component_class):

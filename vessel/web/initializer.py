@@ -6,8 +6,8 @@ import logging
 from typing import TYPE_CHECKING, Optional, List
 
 if TYPE_CHECKING:
-    from vessel.web.middleware import MiddlewareChain
-    from vessel.core.container_manager import ContainerManager
+    from vessel.web.middleware.chain import MiddlewareChain
+    from vessel.di.container_manager import ContainerManager
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +82,7 @@ class ApplicationInitializer:
     def _detect_middleware_chain(self) -> Optional["MiddlewareChain"]:
         """MiddlewareChain 자동 감지"""
         try:
-            from vessel.web.middleware import MiddlewareChain
+            from vessel.web.middleware.chain import MiddlewareChain
 
             middleware_chain = self.container_manager.get_instance(MiddlewareChain)
 
@@ -110,7 +110,7 @@ class ApplicationInitializer:
 
     def _create_route_handler(self):
         """RouteHandler 생성"""
-        from vessel.http.route_handler import RouteHandler
+        from vessel.http.router import RouteHandler
 
         return RouteHandler(self.container_manager)
 

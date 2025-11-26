@@ -7,7 +7,7 @@ import inspect
 from typing import get_type_hints
 
 from vessel.http.request import HttpRequest, HttpResponse
-from vessel.core.container_manager import ContainerManager
+from vessel.di.container_manager import ContainerManager
 
 
 class Route:
@@ -65,7 +65,7 @@ class RouteHandler:
                     # 핸들러 컨테이너가 있으면 인터셉터 적용
                     handler_to_use = attr
                     if hasattr(attr, "__pydi_container__"):
-                        from vessel.http.http_handler import HttpMethodMappingHandler
+                        from vessel.decorators.web.mapping import HttpMethodMappingHandler
 
                         container = attr.__pydi_container__
                         if (

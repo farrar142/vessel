@@ -113,7 +113,9 @@ class TestApplication:
 
         app = Application("__main__")
         app.initialize()  # 먼저 초기화
-        app.add_error_handler(ValueError, handle_value_error)  # 그 다음 에러 핸들러 추가
+        app.add_error_handler(
+            ValueError, handle_value_error
+        )  # 그 다음 에러 핸들러 추가
 
         request = HttpRequest(method="GET", path="/api/error")
         response = app.handle_request(request)

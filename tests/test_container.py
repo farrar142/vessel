@@ -3,7 +3,7 @@ Unit Tests for Container classes
 """
 
 import pytest
-from vessel.core.container import Container, ContainerType
+from vessel.di.container import Container, ContainerType
 
 
 class MockContainer(Container):

@@ -3,7 +3,7 @@ Unit Tests for Handler and Interceptor
 """
 
 import pytest
-from vessel.decorators.handler import (
+from vessel.decorators.handler.handler import (
     HandlerContainer,
     HandlerInterceptor,
     TransactionInterceptor,

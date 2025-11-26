@@ -3,18 +3,18 @@ Vessel - Python Dependency Injection Framework
 Spring IOC 스타일의 의존성 주입 프레임워크
 """
 
-from vessel.decorators.component import Component
-from vessel.decorators.factory import Factory
-from vessel.decorators.controller import Controller, RequestMapping
-from vessel.decorators.configuration import Configuration
-from vessel.decorators.handler import (
+from vessel.decorators.di.component import Component
+from vessel.decorators.di.factory import Factory
+from vessel.decorators.web.controller import Controller, RequestMapping
+from vessel.decorators.di.configuration import Configuration
+from vessel.decorators.handler.handler import (
     Transaction,
     Logging,
     HandlerInterceptor,
     HandlerContainer,
     create_handler_decorator,
 )
-from vessel.http.http_handler import (
+from vessel.decorators.web.mapping import (
     Get,
     Post,
     Put,
@@ -22,11 +22,11 @@ from vessel.http.http_handler import (
     Patch,
     HttpMethodMappingHandler,
 )
-from vessel.core.container_manager import ContainerManager
+from vessel.di.container_manager import ContainerManager
 from vessel.http.request import HttpRequest, HttpResponse
 from vessel.web.application import Application
-from vessel.web.middleware import Middleware, MiddlewareChain, MiddlewareGroup
-from vessel.web.builtins import (
+from vessel.web.middleware.chain import Middleware, MiddlewareChain, MiddlewareGroup
+from vessel.web.middleware.builtins import (
     CorsMiddleware,
     LoggingMiddleware,
     AuthenticationMiddleware,

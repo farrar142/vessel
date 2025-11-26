@@ -4,7 +4,7 @@ HTTP, WebSocket 등 다양한 프로토콜에서 사용 가능
 """
 
 from typing import Callable, TypeVar, Any, List, Optional
-from vessel.core.container import Container, ContainerType, register_container
+from vessel.di.container import Container, ContainerType, register_container
 import functools
 
 T = TypeVar("T")
@@ -189,7 +189,7 @@ def create_handler_decorator(
             inject_dependencies=True
         )
     """
-    from vessel.core.container_manager import ContainerManager
+    from vessel.di.container_manager import ContainerManager
 
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         # 핸들러 컨테이너가 없으면 생성

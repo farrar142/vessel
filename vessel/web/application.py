@@ -10,14 +10,14 @@ Spring Boot의 SpringApplication과 유사한 역할
 
 from typing import TYPE_CHECKING, Optional, Any, Callable
 import logging
-from vessel.core.container_manager import ContainerManager
+from vessel.di.container_manager import ContainerManager
 from vessel.http.request import HttpRequest, HttpResponse
-from vessel.web.app_initializer import ApplicationInitializer
+from vessel.web.initializer import ApplicationInitializer
 from vessel.web.request_handler import RequestHandler
 
 if TYPE_CHECKING:
-    from vessel.web.middleware import MiddlewareChain
-    from vessel.http.route_handler import RouteHandler
+    from vessel.web.middleware.chain import MiddlewareChain
+    from vessel.http.router import RouteHandler
 
 logger = logging.getLogger(__name__)
 
@@ -191,7 +191,7 @@ class Application:
             server.run(self)
         else:
             # DevServer 사용
-            from vessel.web.dev_server import DevServer
+            from vessel.web.server import DevServer
 
             dev_server = DevServer(self, host=self.host, port=self.port)
             try:

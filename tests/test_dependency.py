@@ -3,7 +3,7 @@ Unit Tests for Dependency Graph and Resolution
 """
 
 import pytest
-from vessel.core.dependency import DependencyGraph, extract_dependencies
+from vessel.di.dependency import DependencyGraph, extract_dependencies
 
 
 class TestDependencyGraph:

@@ -4,7 +4,7 @@ InterceptorResolver - 인터셉터 의존성 해결 책임
 
 from typing import Any, Dict, Set, Type
 from typing import get_type_hints
-from vessel.core.container import get_all_registered_targets, get_container_holder
+from vessel.di.container import get_all_registered_targets, get_container_holder
 
 
 class InterceptorResolver:
@@ -36,7 +36,7 @@ class InterceptorResolver:
     def _collect_interceptor_dependency_types(components: Dict[Type, Any]) -> Set[Type]:
         """인터셉터가 필요로 하는 의존성 타입들을 수집"""
         # 런타임에 import하여 순환 import 방지
-        from vessel.decorators.handler import HandlerContainer
+        from vessel.decorators.handler.handler import HandlerContainer
 
         interceptor_dep_types = set()
         targets = get_all_registered_targets()
@@ -82,7 +82,7 @@ class InterceptorResolver:
             container_manager: ContainerManager 인스턴스
         """
         # 런타임에 import하여 순환 import 방지
-        from vessel.decorators.handler import HandlerContainer
+        from vessel.decorators.handler.handler import HandlerContainer
 
         targets = get_all_registered_targets()
 

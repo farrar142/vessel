@@ -16,9 +16,9 @@ class HttpCookieInjector(ParameterInjector):
     def can_inject(self, context: InjectionContext) -> bool:
         """HttpCookie 타입 또는 Optional[HttpCookie] 타입인 경우"""
         param_type = context.param_type
+        origin = get_origin(param_type)
 
         # Annotated[HttpCookie, "name"] 체크
-        origin = get_origin(param_type)
         if origin is Annotated:
             args = get_args(param_type)
             if args and args[0] == HttpCookie:
@@ -28,23 +28,29 @@ class HttpCookieInjector(ParameterInjector):
         if param_type == HttpCookie:
             return True
 
-        # Optional[HttpCookie] 체크
+        # Optional[HttpCookie] 또는 Optional[Annotated[HttpCookie, "name"]] 체크
         if origin is Union:
             args = get_args(param_type)
-            if HttpCookie in args and type(None) in args:
-                return True
+            # Union 안에 HttpCookie가 있거나, Annotated[HttpCookie, ...]가 있는지 확인
+            for arg in args:
+                if arg == HttpCookie:
+                    return True
+                arg_origin = get_origin(arg)
+                if arg_origin is Annotated:
+                    arg_args = get_args(arg)
+                    if arg_args and arg_args[0] == HttpCookie:
+                        return True
 
         return False
 
     def inject(self, context: InjectionContext) -> Tuple[Optional[Any], bool]:
         """HTTP 쿠키 값을 주입"""
         param_type = context.param_type
-        param = context.param
         request = context.request
         param_name = context.param_name
 
-        # 명시적 이름 추출
-        explicit_name = self._extract_explicit_name(param_type, param)
+        # 명시적 이름 추출 (Annotated에서만)
+        explicit_name = self._extract_explicit_name(param_type)
 
         # Optional 여부 확인
         is_optional = self._is_optional(param_type)
@@ -68,35 +74,28 @@ class HttpCookieInjector(ParameterInjector):
                     ]
                 )
 
-        return cookie_value, False
+        # HttpCookie 객체 생성
+        http_cookie = HttpCookie(name=cookie_name, value=cookie_value)
+        return http_cookie, False
 
-    def _extract_explicit_name(
-        self, param_type: Any, param: inspect.Parameter
-    ) -> Optional[str]:
-        """명시적으로 지정된 쿠키 이름 추출"""
-        # Annotated에서 추출
+    def _extract_explicit_name(self, param_type: Any) -> Optional[str]:
+        """Annotated 타입에서 명시적으로 지정된 쿠키 이름 추출"""
         origin = get_origin(param_type)
+        
+        # Annotated[HttpCookie, "name"]에서 추출
         if origin is Annotated:
             args = get_args(param_type)
             if args and args[0] == HttpCookie and len(args) > 1:
                 return args[1]
-
-        # 기본값에서 추출
-        if param.default != inspect.Parameter.empty:
-            # HttpCookie 인스턴스인 경우
-            if isinstance(param.default, HttpCookie) and param.default.name:
-                return param.default.name
-
-            # Annotated 타입인 경우
-            default_origin = get_origin(param.default)
-            if default_origin is Annotated:
-                default_args = get_args(param.default)
-                if (
-                    default_args
-                    and default_args[0] == HttpCookie
-                    and len(default_args) > 1
-                ):
-                    return default_args[1]
+        
+        # Optional[Annotated[HttpCookie, "name"]]에서 추출
+        if origin is Union:
+            for arg in get_args(param_type):
+                arg_origin = get_origin(arg)
+                if arg_origin is Annotated:
+                    arg_args = get_args(arg)
+                    if arg_args and arg_args[0] == HttpCookie and len(arg_args) > 1:
+                        return arg_args[1]
 
         return None
 
@@ -105,7 +104,20 @@ class HttpCookieInjector(ParameterInjector):
         origin = get_origin(param_type)
         if origin is Union:
             args = get_args(param_type)
-            return HttpCookie in args and type(None) in args
+            # Union 안에 HttpCookie나 Annotated[HttpCookie, ...]와 None이 있는지 확인
+            has_none = type(None) in args
+            has_http_cookie = False
+            for arg in args:
+                if arg == HttpCookie:
+                    has_http_cookie = True
+                    break
+                arg_origin = get_origin(arg)
+                if arg_origin is Annotated:
+                    arg_args = get_args(arg)
+                    if arg_args and arg_args[0] == HttpCookie:
+                        has_http_cookie = True
+                        break
+            return has_none and has_http_cookie
         return False
 
     @property

@@ -1,37 +1,46 @@
 """
-Type markers for HTTP header and cookie injection
+HTTP header and cookie value objects for injection
 """
 
-from typing import Optional, Annotated, get_origin, get_args
+from typing import Optional, Annotated
 
 
 class HttpHeader:
     """
-    Type marker for HTTP header injection.
+    HTTP header value object.
 
     When used as a type hint, the framework will inject the corresponding HTTP header value.
 
     Two usage patterns are supported:
     1. Auto-conversion from parameter name (snake_case -> Title-Case):
         def get_user(self, user_agent: HttpHeader):
-            # user_agent -> User-Agent header
+            # user_agent.name -> "User-Agent"
+            # user_agent.value -> "Mozilla/5.0 ..."
             pass
 
     2. Explicit header name specification:
         def get_user(self, agent: HttpHeader["User-Agent"]):
-            # agent parameter gets User-Agent header value
+            # agent.name -> "User-Agent"
+            # agent.value -> "Mozilla/5.0 ..."
             pass
     """
 
-    def __init__(self, name: Optional[str] = None):
+    def __init__(self, name: str, value: str):
         """
-        Initialize HttpHeader with optional explicit name.
+        Initialize HttpHeader with name and value.
 
         Args:
-            name: Explicit header name (e.g., "User-Agent", "Content-Type")
-                  If None, parameter name will be auto-converted.
+            name: Header name (e.g., "User-Agent", "Content-Type")
+            value: Header value
         """
         self.name = name
+        self.value = value
+
+    def __repr__(self) -> str:
+        return f"HttpHeader(name='{self.name}', value='{self.value}')"
+
+    def __str__(self) -> str:
+        return self.value
 
     @classmethod
     def __class_getitem__(cls, name: str):
@@ -44,31 +53,40 @@ class HttpHeader:
 
 class HttpCookie:
     """
-    Type marker for HTTP cookie injection.
+    HTTP cookie value object.
 
     When used as a type hint, the framework will inject the corresponding cookie value.
 
     Two usage patterns are supported:
     1. Auto-match with parameter name:
         def get_user(self, session_id: HttpCookie):
-            # session_id -> session_id cookie
+            # session_id.name -> "session_id"
+            # session_id.value -> "abc123..."
             pass
 
     2. Explicit cookie name specification:
         def get_user(self, token: HttpCookie["access_token"]):
-            # token parameter gets access_token cookie value
+            # token.name -> "access_token"
+            # token.value -> "xyz789..."
             pass
     """
 
-    def __init__(self, name: Optional[str] = None):
+    def __init__(self, name: str, value: str):
         """
-        Initialize HttpCookie with optional explicit name.
+        Initialize HttpCookie with name and value.
 
         Args:
-            name: Explicit cookie name (e.g., "session_id", "access_token")
-                  If None, parameter name will be used as-is.
+            name: Cookie name (e.g., "session_id", "access_token")
+            value: Cookie value
         """
         self.name = name
+        self.value = value
+
+    def __repr__(self) -> str:
+        return f"HttpCookie(name='{self.name}', value='{self.value}')"
+
+    def __str__(self) -> str:
+        return self.value
 
     @classmethod
     def __class_getitem__(cls, name: str):

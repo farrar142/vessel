@@ -16,9 +16,9 @@ class HttpHeaderInjector(ParameterInjector):
     def can_inject(self, context: InjectionContext) -> bool:
         """HttpHeader 타입 또는 Optional[HttpHeader] 타입인 경우"""
         param_type = context.param_type
+        origin = get_origin(param_type)
 
         # Annotated[HttpHeader, "name"] 체크
-        origin = get_origin(param_type)
         if origin is Annotated:
             args = get_args(param_type)
             if args and args[0] == HttpHeader:
@@ -28,23 +28,29 @@ class HttpHeaderInjector(ParameterInjector):
         if param_type == HttpHeader:
             return True
 
-        # Optional[HttpHeader] 체크
+        # Optional[HttpHeader] 또는 Optional[Annotated[HttpHeader, "name"]] 체크
         if origin is Union:
             args = get_args(param_type)
-            if HttpHeader in args and type(None) in args:
-                return True
+            # Union 안에 HttpHeader가 있거나, Annotated[HttpHeader, ...]가 있는지 확인
+            for arg in args:
+                if arg == HttpHeader:
+                    return True
+                arg_origin = get_origin(arg)
+                if arg_origin is Annotated:
+                    arg_args = get_args(arg)
+                    if arg_args and arg_args[0] == HttpHeader:
+                        return True
 
         return False
 
     def inject(self, context: InjectionContext) -> Tuple[Optional[Any], bool]:
         """HTTP 헤더 값을 주입"""
         param_type = context.param_type
-        param = context.param
         request = context.request
         param_name = context.param_name
 
-        # 명시적 이름 추출
-        explicit_name = self._extract_explicit_name(param_type, param)
+        # 명시적 이름 추출 (Annotated에서만)
+        explicit_name = self._extract_explicit_name(param_type)
 
         # Optional 여부 확인
         is_optional = self._is_optional(param_type)
@@ -70,35 +76,28 @@ class HttpHeaderInjector(ParameterInjector):
                     ]
                 )
 
-        return header_value, False
+        # HttpHeader 객체 생성
+        http_header = HttpHeader(name=header_name, value=header_value)
+        return http_header, False
 
-    def _extract_explicit_name(
-        self, param_type: Any, param: inspect.Parameter
-    ) -> Optional[str]:
-        """명시적으로 지정된 헤더 이름 추출"""
-        # Annotated에서 추출
+    def _extract_explicit_name(self, param_type: Any) -> Optional[str]:
+        """Annotated 타입에서 명시적으로 지정된 헤더 이름 추출"""
         origin = get_origin(param_type)
+        
+        # Annotated[HttpHeader, "name"]에서 추출
         if origin is Annotated:
             args = get_args(param_type)
             if args and args[0] == HttpHeader and len(args) > 1:
                 return args[1]
-
-        # 기본값에서 추출
-        if param.default != inspect.Parameter.empty:
-            # HttpHeader 인스턴스인 경우
-            if isinstance(param.default, HttpHeader) and param.default.name:
-                return param.default.name
-
-            # Annotated 타입인 경우
-            default_origin = get_origin(param.default)
-            if default_origin is Annotated:
-                default_args = get_args(param.default)
-                if (
-                    default_args
-                    and default_args[0] == HttpHeader
-                    and len(default_args) > 1
-                ):
-                    return default_args[1]
+        
+        # Optional[Annotated[HttpHeader, "name"]]에서 추출
+        if origin is Union:
+            for arg in get_args(param_type):
+                arg_origin = get_origin(arg)
+                if arg_origin is Annotated:
+                    arg_args = get_args(arg)
+                    if arg_args and arg_args[0] == HttpHeader and len(arg_args) > 1:
+                        return arg_args[1]
 
         return None
 
@@ -107,7 +106,20 @@ class HttpHeaderInjector(ParameterInjector):
         origin = get_origin(param_type)
         if origin is Union:
             args = get_args(param_type)
-            return HttpHeader in args and type(None) in args
+            # Union 안에 HttpHeader나 Annotated[HttpHeader, ...]와 None이 있는지 확인
+            has_none = type(None) in args
+            has_http_header = False
+            for arg in args:
+                if arg == HttpHeader:
+                    has_http_header = True
+                    break
+                arg_origin = get_origin(arg)
+                if arg_origin is Annotated:
+                    arg_args = get_args(arg)
+                    if arg_args and arg_args[0] == HttpHeader:
+                        has_http_header = True
+                        break
+            return has_none and has_http_header
         return False
 
     def _convert_to_header_name(self, param_name: str) -> str:

@@ -8,7 +8,7 @@ from vessel.web.router.parameter_injection.annotated_value_injector import (
     AnnotatedValueInjector,
 )
 from vessel.web.router.parameter_injection.base import InjectionContext
-from vessel.http.injection_types import HttpCookie
+from vessel.web.http.injection_types import HttpCookie
 
 
 class HttpCookieInjector(AnnotatedValueInjector):

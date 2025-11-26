@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional, Tuple
 from dataclasses import dataclass
 import inspect
 
-from vessel.http.request import HttpRequest
+from vessel.web.http.request import HttpRequest
 
 
 @dataclass

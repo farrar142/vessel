@@ -7,7 +7,7 @@ from vessel.decorators.di.component import Component
 from vessel.decorators.web.controller import Controller
 from vessel.decorators.web.mapping import Post
 from vessel.web.application import Application
-from vessel.http.request import HttpRequest
+from vessel.web.http.request import HttpRequest
 
 
 class TestBasicFileUpload:
@@ -15,7 +15,7 @@ class TestBasicFileUpload:
 
     def test_single_file_upload_success(self):
         """단일 파일 업로드 성공"""
-        from vessel.http.file_upload import UploadedFile
+        from vessel.web.http.file_upload import UploadedFile
 
         @Controller("/api")
         class FileController:
@@ -57,7 +57,7 @@ class TestBasicFileUpload:
 
     def test_file_content_read(self):
         """파일 내용 읽기"""
-        from vessel.http.file_upload import UploadedFile
+        from vessel.web.http.file_upload import UploadedFile
 
         @Controller("/api")
         class FileController:
@@ -92,7 +92,7 @@ class TestBasicFileUpload:
         """파일 저장"""
         import tempfile
         import os
-        from vessel.http.file_upload import UploadedFile
+        from vessel.web.http.file_upload import UploadedFile
 
         @Controller("/api")
         class FileController:
@@ -138,7 +138,7 @@ class TestMultipleFileUpload:
 
     def test_multiple_files_upload(self):
         """여러 파일 동시 업로드"""
-        from vessel.http.file_upload import UploadedFile
+        from vessel.web.http.file_upload import UploadedFile
 
         @Controller("/api")
         class FileController:
@@ -183,7 +183,7 @@ class TestMultipleFileUpload:
 
     def test_mixed_form_data_and_files(self):
         """폼 데이터와 파일 혼합"""
-        from vessel.http.file_upload import UploadedFile
+        from vessel.web.http.file_upload import UploadedFile
 
         @Controller("/api")
         class FileController:
@@ -227,7 +227,7 @@ class TestFileValidation:
 
     def test_file_size_limit(self):
         """파일 크기 제한 검증"""
-        from vessel.http.file_upload import UploadedFile
+        from vessel.web.http.file_upload import UploadedFile
 
         @Controller("/api")
         class FileController:
@@ -235,7 +235,7 @@ class TestFileValidation:
             def upload_file(self, file: UploadedFile) -> dict:
                 max_size = 1024 * 1024  # 1MB
                 if file.size > max_size:
-                    from vessel.http.request import HttpResponse
+                    from vessel.web.http.request import HttpResponse
 
                     return HttpResponse(
                         status_code=400, body={"error": "File too large"}
@@ -267,7 +267,7 @@ class TestFileValidation:
 
     def test_allowed_file_types(self):
         """허용된 파일 타입 검증"""
-        from vessel.http.file_upload import UploadedFile
+        from vessel.web.http.file_upload import UploadedFile
 
         @Controller("/api")
         class FileController:
@@ -275,7 +275,7 @@ class TestFileValidation:
             def upload_file(self, file: UploadedFile) -> dict:
                 allowed_types = ["image/jpeg", "image/png", "image/gif"]
                 if file.content_type not in allowed_types:
-                    from vessel.http.request import HttpResponse
+                    from vessel.web.http.request import HttpResponse
 
                     return HttpResponse(
                         status_code=400, body={"error": "Invalid file type"}
@@ -306,7 +306,7 @@ class TestFileValidation:
 
     def test_missing_file_parameter(self):
         """파일 파라미터 누락"""
-        from vessel.http.file_upload import UploadedFile
+        from vessel.web.http.file_upload import UploadedFile
 
         @Controller("/api")
         class FileController:
@@ -331,7 +331,7 @@ class TestFilenameSanitization:
 
     def test_safe_filename(self):
         """안전한 파일명 생성"""
-        from vessel.http.file_upload import UploadedFile
+        from vessel.web.http.file_upload import UploadedFile
 
         @Controller("/api")
         class FileController:
@@ -399,7 +399,7 @@ class TestTypeHintBasedFileInjection:
 
     def test_with_uploadedfile_type_hint(self):
         """UploadedFile 타입 힌트가 있으면 파일로 처리"""
-        from vessel.http.file_upload import UploadedFile
+        from vessel.web.http.file_upload import UploadedFile
 
         @Controller("/api")
         class FileController:
@@ -429,7 +429,7 @@ class TestTypeHintBasedFileInjection:
 
     def test_optional_uploadedfile(self):
         """Optional[UploadedFile] 지원"""
-        from vessel.http.file_upload import UploadedFile
+        from vessel.web.http.file_upload import UploadedFile
         from typing import Optional
 
         @Controller("/api")
@@ -477,7 +477,7 @@ class TestExplicitFileKeySpecification:
 
     def test_bracket_syntax_single_file(self):
         """UploadedFile["key"] 구문으로 명시적 키 지정"""
-        from vessel.http.file_upload import UploadedFile
+        from vessel.web.http.file_upload import UploadedFile
 
         @Controller("/api")
         class FileController:
@@ -513,7 +513,7 @@ class TestExplicitFileKeySpecification:
 
     def test_bracket_syntax_with_optional(self):
         """Optional[UploadedFile["key"]] 구문 테스트"""
-        from vessel.http.file_upload import UploadedFile
+        from vessel.web.http.file_upload import UploadedFile
         from typing import Optional
 
         @Controller("/api")
@@ -559,7 +559,7 @@ class TestExplicitFileKeySpecification:
 
     def test_bracket_syntax_with_list(self):
         """list[UploadedFile["key"]] 구문 테스트"""
-        from vessel.http.file_upload import UploadedFile
+        from vessel.web.http.file_upload import UploadedFile
 
         @Controller("/api")
         class FileController:
@@ -599,7 +599,7 @@ class TestExplicitFileKeySpecification:
 
     def test_mixed_auto_and_bracket_files(self):
         """자동 변환과 브래킷 구문 혼합 사용"""
-        from vessel.http.file_upload import UploadedFile
+        from vessel.web.http.file_upload import UploadedFile
 
         @Controller("/api")
         class FileController:
@@ -641,7 +641,7 @@ class TestExplicitFileKeySpecification:
 
     def test_example_from_user(self):
         """사용자 요구사항 예시: 다른 키로 파일 전송"""
-        from vessel.http.file_upload import UploadedFile
+        from vessel.web.http.file_upload import UploadedFile
 
         @Controller("/api")
         class UserController:

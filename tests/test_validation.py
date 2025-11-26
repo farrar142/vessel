@@ -4,7 +4,7 @@ Validation 기능 테스트
 
 import pytest
 from vessel import Application, Controller, Post, Get
-from vessel.http.request import HttpRequest, HttpResponse
+from vessel.web.http.request import HttpRequest, HttpResponse
 
 
 # Pydantic 없이 먼저 간단한 검증부터 시작

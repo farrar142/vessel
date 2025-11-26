@@ -4,7 +4,7 @@ Middleware 추상 클래스 및 MiddlewareChain 구현
 
 from typing import Optional, Any, List
 from abc import ABC, abstractmethod
-from vessel.http.request import HttpRequest, HttpResponse
+from vessel.web.http.request import HttpRequest, HttpResponse
 
 
 class Middleware(ABC):

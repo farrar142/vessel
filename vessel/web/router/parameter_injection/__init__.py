@@ -2,7 +2,10 @@
 Parameter injection system using Registry pattern
 """
 
-from vessel.web.router.parameter_injection.base import ParameterInjector, InjectionContext
+from vessel.web.router.parameter_injection.base import (
+    ParameterInjector,
+    InjectionContext,
+)
 from vessel.web.router.parameter_injection.registry import ParameterInjectorRegistry
 from vessel.web.router.parameter_injection.request_injector import HttpRequestInjector
 from vessel.web.router.parameter_injection.header_injector import HttpHeaderInjector

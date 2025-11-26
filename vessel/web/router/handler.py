@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Callable, Optional, Type, get_origin, get_ar
 import inspect
 from typing import get_type_hints
 
-from vessel.http.request import HttpRequest, HttpResponse
+from vessel.web.http.request import HttpRequest, HttpResponse
 from vessel.di.core.container_manager import ContainerManager
 from vessel.web.router.parameter_injection import (
     ParameterInjectorRegistry,

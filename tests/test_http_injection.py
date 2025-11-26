@@ -4,11 +4,11 @@ Test HTTP Header and Cookie injection with value objects
 
 import pytest
 from typing import Optional
-from vessel.http.injection_types import HttpHeader, HttpCookie
+from vessel.web.http.injection_types import HttpHeader, HttpCookie
 from vessel.decorators.web.controller import Controller
 from vessel.decorators.web.mapping import Get
 from vessel.web.application import Application
-from vessel.http.request import HttpRequest
+from vessel.web.http.request import HttpRequest
 
 
 class TestHttpHeaderInjection:

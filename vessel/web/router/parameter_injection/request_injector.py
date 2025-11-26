@@ -6,7 +6,7 @@ from typing import Any, Optional, Tuple
 import inspect
 
 from vessel.web.router.parameter_injection.base import ParameterInjector, InjectionContext
-from vessel.http.request import HttpRequest
+from vessel.web.http.request import HttpRequest
 
 
 class HttpRequestInjector(ParameterInjector):

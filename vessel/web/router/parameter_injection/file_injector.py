@@ -8,7 +8,7 @@ from vessel.web.router.parameter_injection.annotated_value_injector import (
     AnnotatedValueInjector,
 )
 from vessel.web.router.parameter_injection.base import InjectionContext
-from vessel.http.file_upload import (
+from vessel.web.http.file_upload import (
     UploadedFile,
     parse_file_from_dict,
     parse_files_from_list,

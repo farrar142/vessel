@@ -7,7 +7,7 @@ import http.server
 import socketserver
 import json
 from typing import TYPE_CHECKING
-from vessel.http.request import HttpRequest
+from vessel.web.http.request import HttpRequest
 
 if TYPE_CHECKING:
     from vessel.web.application import Application

@@ -5,7 +5,7 @@ Middleware들은 @Component가 아닌 @Factory로 생성되어야 함
 
 from typing import Optional, List, Any
 from vessel.web.middleware.chain import Middleware
-from vessel.http.request import HttpRequest, HttpResponse
+from vessel.web.http.request import HttpRequest, HttpResponse
 
 
 class CorsMiddleware(Middleware):

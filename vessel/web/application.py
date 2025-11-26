@@ -11,7 +11,7 @@ Spring Boot의 SpringApplication과 유사한 역할
 from typing import TYPE_CHECKING, Optional, Any, Callable
 import logging
 from vessel.di.core.container_manager import ContainerManager
-from vessel.http.request import HttpRequest, HttpResponse
+from vessel.web.http.request import HttpRequest, HttpResponse
 from vessel.web.initializer import ApplicationInitializer
 from vessel.web.request_handler import RequestHandler
 

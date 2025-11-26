@@ -59,7 +59,7 @@ class TestDecoratorFactoryIntegration:
 
         # RouteHandler를 통해 핸들러 실행 - 인터셉터가 실제로 동작
         from vessel.web.router import RouteHandler
-        from vessel.http.request import HttpRequest
+        from vessel.web.http.request import HttpRequest
 
         route_handler = RouteHandler(manager)
         request = HttpRequest(method="GET", path="/test")
@@ -134,7 +134,7 @@ class TestDecoratorFactoryIntegration:
 
         # RouteHandler를 통해 핸들러 실행 - 인터셉터들이 실제로 동작
         from vessel.web.router import RouteHandler
-        from vessel.http.request import HttpRequest
+        from vessel.web.http.request import HttpRequest
 
         route_handler = RouteHandler(manager)
         request = HttpRequest(method="GET", path="/test")
@@ -191,7 +191,7 @@ class TestDecoratorFactoryIntegration:
 
         # RouteHandler를 통해 핸들러 실행 - 인터셉터가 실제로 동작
         from vessel.web.router import RouteHandler
-        from vessel.http.request import HttpRequest
+        from vessel.web.http.request import HttpRequest
 
         route_handler = RouteHandler(manager)
         request = HttpRequest(method="GET", path="/test")
@@ -260,7 +260,7 @@ class TestDecoratorFactoryIntegration:
 
         # RouteHandler를 통해 핸들러 실행 - 두 인터셉터가 모두 동작
         from vessel.web.router import RouteHandler
-        from vessel.http.request import HttpRequest
+        from vessel.web.http.request import HttpRequest
 
         route_handler = RouteHandler(manager)
         request = HttpRequest(method="GET", path="/test")

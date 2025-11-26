@@ -4,7 +4,7 @@ Authentication Middleware and Components
 
 from abc import ABC, abstractmethod
 from typing import Optional, Any
-from vessel.http.request import HttpRequest
+from vessel.web.http.request import HttpRequest
 from vessel.web.middleware.chain import Middleware
 
 

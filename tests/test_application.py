@@ -4,7 +4,7 @@ Application 클래스 테스트
 
 import pytest
 from vessel import Application, Component, Controller, Get, Post
-from vessel.http.request import HttpRequest, HttpResponse
+from vessel.web.http.request import HttpRequest, HttpResponse
 
 
 class TestApplication:

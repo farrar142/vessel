@@ -1,56 +1,80 @@
-# Vessel Framework - Development Tasks
+# Vessel Framework - 개발 작업 목록
 
-> Last Updated: 2025-11-26 | Version: 0.1.0-alpha
-
----
-
-## 📊 Current Status
-
-- **85/85 Tests Passing** ✅
-- **32 Files** - Well-structured architecture
-- **Core Features Complete**: DI, Web, Middleware, Validation, FileUpload
+> 최종 업데이트: 2025-11-26 | 버전: 0.1.0-alpha
 
 ---
 
-## ✅ Completed Phases
+## 📊 현재 상태
 
-### Phase 1: Core DI Framework ✅
+- **104/104 테스트 통과** ✅
+- **39개 파일** - 잘 구조화된 아키텍처
+- **완료된 핵심 기능**: DI, Web, Middleware, Validation, FileUpload, HTTP Injection, Registry Pattern
+
+---
+
+## ✅ 완료된 단계
+
+### Phase 1: 핵심 DI 프레임워크 ✅
 - Container, DependencyGraph, ContainerManager
 - @Component, @Configuration, @Factory
-- Type-based dependency injection
-- Singleton pattern
+- 타입 기반 의존성 주입
+- 싱글톤 패턴
 
-### Phase 2: Web Framework ✅
+### Phase 2: 웹 프레임워크 ✅
 - HttpRequest/HttpResponse, RouteHandler
-- Path parameters with auto type conversion
+- 자동 타입 변환을 포함한 경로 매개변수
 - @Controller, @Get, @Post, @Put, @Delete, @Patch
-- Middleware chain with early return support
-- Application facade, DevServer
+- 조기 반환을 지원하는 미들웨어 체인
+- Application 파사드, DevServer
 
-### Phase 3: Code Quality ✅
-- SRP: Split Application into 4 classes
-- Restructured vessel/ by feature
-- Separated di/core and di/utils
+### Phase 3: 코드 품질 ✅
+- SRP: Application을 4개 클래스로 분리
+- 기능별로 vessel/ 재구조화
+- di/core와 di/utils 분리
 
-### Phase 4: Core Features (In Progress)
+### Phase 4: 핵심 기능 ✅
 - **✅ Validation** (13 tests)
-  - ParameterValidator: Type conversion & validation
-  - ValidationError: Auto 400 responses
-  - Multi-error collection with detailed messages
-  - Query/Path/Body parameter validation
-  - **Strong typing**: Missing type hints → Error
+  - ParameterValidator: 타입 변환 & 검증
+  - ValidationError: 자동 400 응답
+  - 상세한 메시지와 함께 다중 오류 수집
+  - Query/Path/Body 매개변수 검증
+  - **강력한 타입 지정**: 타입 힌트 누락 → 오류
   
 - **✅ File Upload** (12 tests)
-  - UploadedFile class: read(), save(), secure_filename()
-  - **Type-based injection**: file: UploadedFile
-  - Support: UploadedFile, Optional[UploadedFile], list[UploadedFile]
-  - File size validation, MIME type checking
-  - Filename sanitization (path traversal prevention)
-  - **Strong typing**: File params require explicit type hints
+  - UploadedFile 클래스: read(), save(), secure_filename()
+  - **타입 기반 주입**: file: UploadedFile
+  - 지원: UploadedFile, Optional[UploadedFile], list[UploadedFile]
+  - 파일 크기 검증, MIME 타입 확인
+  - 파일명 정제 (경로 탐색 공격 방지)
+  - **강력한 타입 지정**: 파일 매개변수는 명시적 타입 힌트 필요
+
+- **✅ HTTP Injection** (19 tests)
+  - HttpHeader, HttpCookie 타입 마커
+  - **3가지 문법 지원**:
+    - 자동 변환: `user_agent: HttpHeader`
+    - 명시적 호출: `agent: HttpHeader = HttpHeader("User-Agent")`
+    - 브래킷 문법: `agent: HttpHeader["User-Agent"]`
+  - Optional 매개변수 지원
+  - Annotated 타입 지원
+
+### Phase 5: 아키텍처 개선 ✅
+- **✅ Registry Pattern** (리팩토링)
+  - 모듈식 파라미터 주입 시스템
+  - router.py 간소화 (265+ 라인 → 31 라인)
+  - 개별 Injector 구현:
+    * HttpRequestInjector (우선순위: 0)
+    * HttpHeaderInjector (우선순위: 100)
+    * HttpCookieInjector (우선순위: 101)
+    * FileInjector (우선순위: 200)
+  - **아키텍처 이점**:
+    - 단일 책임: 각 injector는 하나의 타입 처리
+    - 확장성: ParameterInjector 구현으로 새 타입 추가
+    - 테스트 가능성: 각 injector를 독립적으로 테스트
+    - 유지보수성: 우선순위 시스템으로 명확한 관심사 분리
 
 ---
 
-## 📁 Project Structure
+## 📁 프로젝트 구조
 
 ```
 vessel/
@@ -62,84 +86,92 @@ vessel/
 │   ├── web/            # @Controller, HTTP mappings
 │   └── handler/        # HandlerContainer, Interceptors
 ├── http/
-│   ├── request.py      # HttpRequest, HttpResponse
-│   ├── router.py       # RouteHandler
-│   ├── file_upload.py  # UploadedFile ✨ NEW
-│   └── validation.py   # ParameterValidator, ValidationError
+│   ├── request.py           # HttpRequest, HttpResponse
+│   ├── router.py            # RouteHandler (리팩토링됨)
+│   ├── file_upload.py       # UploadedFile
+│   ├── injection_types.py   # HttpHeader, HttpCookie ✨ NEW
+│   ├── parameter_injection/ # Registry 패턴 ✨ NEW
+│   │   ├── base.py          # ParameterInjector, InjectionContext
+│   │   ├── registry.py      # ParameterInjectorRegistry
+│   │   ├── request_injector.py
+│   │   ├── header_injector.py
+│   │   ├── cookie_injector.py
+│   │   └── file_injector.py
+│   └── validation.py        # ParameterValidator, ValidationError
 └── web/
     ├── application.py, initializer.py, request_handler.py, server.py
-    └── middleware/     # MiddlewareChain, CorsMiddleware
+    └── middleware/          # MiddlewareChain, CorsMiddleware
 ```
 
 ---
 
-## 🚀 Next Tasks
+## 🚀 다음 작업
 
-### Phase 4 Completion
+### Phase 6: 개발자 경험
 
-#### Web Features
-- [ ] **Static Files** - `app.serve_static("/static", "./public")`
-- [ ] **Response Streaming** - Large file downloads
-
-#### Middleware
-- [ ] **CompressionMiddleware** - gzip compression
-- [ ] **RateLimitMiddleware** - Rate limiting
-- [ ] **SessionMiddleware** - Session management
-- [ ] **SecurityHeadersMiddleware** - Security headers
-- [ ] **Middleware Priority** - Order control
-
----
-
-### Phase 5: Developer Experience
-
-#### CLI Tools
-- [ ] `vessel create my-project` - Project scaffolding
-- [ ] `vessel new controller UserController` - Code generation
+#### CLI 도구
+- [ ] `vessel create my-project` - 프로젝트 스캐폴딩
+- [ ] `vessel new controller UserController` - 코드 생성
 
 #### Dev Server
-- [ ] **Hot Reload** - File change detection
-- [ ] **Enhanced Error Pages** - Stack traces with syntax highlighting
-- [ ] **Colorful Logging** - Better log output
+- [ ] **Hot Reload** - 파일 변경 감지
+- [ ] **향상된 오류 페이지** - 구문 강조가 있는 스택 추적
+- [ ] **컬러풀한 로깅** - 개선된 로그 출력
 
-#### Debugging
-- [ ] **DI Inspector** - Component graph visualization
+#### 디버깅
+- [ ] **DI Inspector** - 컴포넌트 그래프 시각화
 - [ ] **Health Check Endpoint** - `/health`
 
-#### Testing
-- [ ] **@WebTest Decorator** - Test utilities
-- [ ] **Test Client** - HTTP client for testing
-- [ ] **Mock Components** - Dependency mocking
+#### 테스팅
+- [ ] **@WebTest 데코레이터** - 테스트 유틸리티
+- [ ] **Test Client** - 테스트용 HTTP 클라이언트
+- [ ] **Mock Components** - 의존성 모킹
 
 ---
 
-### Phase 6: Production Ready
+### Phase 7: 프로덕션 준비
 
-#### Performance
-- [ ] **Async Support** - `async def` handlers, ASGI
-- [ ] **Caching** - `@Cacheable`, Redis integration
+#### 성능
+- [ ] **비동기 지원** - `async def` 핸들러, ASGI
+- [ ] **캐싱** - `@Cacheable`, Redis 통합
 
-#### Security
-- [ ] **Authentication/Authorization** - JWT, `@Secured(roles=["admin"])`
-- [ ] **CSRF Protection** - Token generation/validation
+#### 보안
+- [ ] **인증/권한** - JWT, `@Secured(roles=["admin"])`
+- [ ] **CSRF 보호** - 토큰 생성/검증
 
-#### Monitoring
-- [ ] **Metrics** - Prometheus integration
-- [ ] **Structured Logging** - structlog (JSON)
-
----
-
-### Phase 7: Ecosystem
-
-- [ ] **ORM Integration** - SQLAlchemy, `@Repository`
-- [ ] **Database Migration** - Alembic
-- [ ] **Messaging** - RabbitMQ/Kafka, `@MessageListener`
-- [ ] **HTTP Client** - `@HttpClient` decorator
+#### 모니터링
+- [ ] **메트릭** - Prometheus 통합
+- [ ] **구조화된 로깅** - structlog (JSON)
 
 ---
 
-## 📈 Test Coverage
+### Phase 8: 생태계
 
-| File | Tests | Status |
+- [ ] **ORM 통합** - SQLAlchemy, `@Repository`
+- [ ] **데이터베이스 마이그레이션** - Alembic
+- [ ] **메시징** - RabbitMQ/Kafka, `@MessageListener`
+- [ ] **HTTP Client** - `@HttpClient` 데코레이터
+
+---
+
+### Phase 9: 웹 기능 완성
+
+#### 정적 파일 & 스트리밍
+- [ ] **Static Files** - `app.serve_static("/static", "./public")`
+- [ ] **Response Streaming** - 대용량 파일 다운로드
+
+#### 추가 미들웨어
+- [ ] **CompressionMiddleware** - gzip 압축
+- [ ] **RateLimitMiddleware** - 속도 제한
+- [ ] **SessionMiddleware** - 세션 관리
+- [ ] **SecurityHeadersMiddleware** - 보안 헤더
+- [ ] **Middleware Priority** - 순서 제어
+
+---
+
+## 📈 테스트 커버리지
+
+| 파일 | 테스트 | 상태 |
 |------|-------|--------|
 | test_application.py | 12 | ✅ |
 | test_component.py | 5 | ✅ |
@@ -151,77 +183,94 @@ vessel/
 | test_middleware_integration.py | 4 | ✅ |
 | test_validation.py | 13 | ✅ |
 | test_file_upload.py | 12 | ✅ |
-| **Total** | **85** | **✅** |
+| test_http_injection.py | 19 | ✅ |
+| **합계** | **104** | **✅** |
 
 ---
 
-## 🛠 Tech Stack
+## 🛠 기술 스택
 
-**Current**: Python 3.12+, pytest
+**현재**: Python 3.12+, pytest
 
-**Future**: Click, watchdog, asyncio, Redis, SQLAlchemy
-
----
-
-## 🚨 Design Constraints
-
-- **❌ NO Constructor Injection**: Field injection only (explicit design choice)
-- **❌ NO Lazy Initialization**: Components initialized eagerly
-- **❌ NO Scope Extensions**: Singleton only (no prototype/request scopes)
-- **❌ NO Qualifier Support**: Single bean per type
-- **❌ NO Template Engine**: API-focused framework (no Jinja2)
-- **✅ STRONG TYPING**: All parameters must have type hints (except self/HttpRequest)
+**향후**: Click, watchdog, asyncio, Redis, SQLAlchemy
 
 ---
 
-## 💡 Key Design Principles
+## 🚨 설계 제약사항
 
-### Type Safety First
+- **❌ 생성자 주입 없음**: 필드 주입만 사용 (명시적 설계 선택)
+- **❌ 지연 초기화 없음**: 컴포넌트는 즉시 초기화
+- **❌ 스코프 확장 없음**: 싱글톤만 지원 (prototype/request 스코프 없음)
+- **❌ Qualifier 지원 없음**: 타입당 단일 빈
+- **❌ 템플릿 엔진 없음**: API 중심 프레임워크 (Jinja2 없음)
+- **✅ 강력한 타입 지정**: 모든 매개변수는 타입 힌트 필수 (self/HttpRequest 제외)
+
+---
+
+## 💡 주요 설계 원칙
+
+### 타입 안정성 우선
 ```python
-# ❌ BAD - No type hint
-def upload(self, file):  # Error: Missing type hint
+# ❌ 나쁨 - 타입 힌트 없음
+def upload(self, file):  # 오류: 타입 힌트 누락
 
-# ✅ GOOD - Explicit type
+# ✅ 좋음 - 명시적 타입
 def upload(self, file: UploadedFile):  # OK
 ```
 
-### Explicit > Implicit
+### 명시적 > 암시적
 ```python
-# File upload requires explicit type annotation
-def upload(self, file: UploadedFile):  # Only works with type hint
+# 파일 업로드는 명시적 타입 어노테이션 필요
+def upload(self, file: UploadedFile):  # 타입 힌트가 있어야만 작동
     return {"name": file.filename}
 ```
 
-### Convention over Configuration
+### 관례 우선 설정
 ```python
 @Controller("/api")
 class UserController:
     @Get("/users/{id}")
-    def get_user(self, id: int) -> dict:  # Path param auto-injected
+    def get_user(self, id: int) -> dict:  # 경로 매개변수 자동 주입
         return {"id": id}
+```
+
+### Registry 패턴 (새로운 원칙)
+```python
+# 각 Injector는 단일 책임을 가짐
+class HttpHeaderInjector(ParameterInjector):
+    def can_inject(self, context) -> bool:
+        # HttpHeader 타입인지 확인
+        
+    def inject(self, context) -> Tuple[Any, bool]:
+        # 헤더 값 주입
+        
+    @property
+    def priority(self) -> int:
+        return 100  # 실행 우선순위
 ```
 
 ---
 
-## 📝 Quick Start
+## 📝 빠른 시작
 
 ```bash
-# Install
+# 설치
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install pytest
 
-# Test
+# 테스트
 pytest -v
 
-# Run
+# 실행
 python -m vessel.web.server
 ```
 
 ---
 
-## 💻 Example Usage
+## 💻 사용 예제
 
+### 파일 업로드
 ```python
 from vessel.decorators.web.controller import Controller
 from vessel.decorators.web.mapping import Post, Get
@@ -232,13 +281,13 @@ from typing import Optional
 class FileController:
     @Post("/upload")
     def upload(self, file: UploadedFile, title: str, description: str = "") -> dict:
-        # Validation happens automatically
-        # file is guaranteed to be UploadedFile
-        # title is required string
-        # description is optional with default
+        # 검증은 자동으로 이루어짐
+        # file은 UploadedFile임이 보장됨
+        # title은 필수 문자열
+        # description은 기본값이 있는 선택적 매개변수
         
         if file.size > 10 * 1024 * 1024:  # 10MB
-            return {"error": "File too large"}
+            return {"error": "파일이 너무 큽니다"}
         
         safe_name = file.secure_filename()
         file.save(f"./uploads/{safe_name}")
@@ -251,13 +300,44 @@ class FileController:
     
     @Get("/files")
     def list_files(self, page: int = 1, limit: int = 10) -> dict:
-        # Query params auto-validated and converted
+        # 쿼리 매개변수 자동 검증 및 변환
         return {"page": page, "limit": limit}
+```
+
+### HTTP 헤더/쿠키 주입
+```python
+from vessel.http.injection_types import HttpHeader, HttpCookie
+from typing import Optional
+
+@Controller("/api")
+class AuthController:
+    @Get("/profile")
+    def get_profile(
+        self,
+        user_agent: HttpHeader,  # User-Agent 헤더 자동 변환
+        access_token: HttpCookie,  # access_token 쿠키
+        auth: HttpHeader = HttpHeader("Authorization"),  # 명시적 이름
+        session: Optional[HttpCookie] = None  # 선택적 쿠키
+    ) -> dict:
+        return {
+            "user_agent": user_agent,
+            "token": access_token,
+            "auth": auth,
+            "has_session": session is not None
+        }
+    
+    @Get("/info")
+    def get_info(
+        self,
+        agent: HttpHeader["User-Agent"],  # 브래킷 문법
+        sid: HttpCookie["session_id"]  # 브래킷 문법
+    ) -> dict:
+        return {"agent": agent, "session_id": sid}
 ```
 
 ---
 
-## 🎯 Commit Convention
+## 🎯 커밋 컨벤션
 
 ```
 <type>: <subject>
@@ -265,17 +345,17 @@ class FileController:
 Types: feat, fix, refactor, test, docs, chore
 ```
 
-**Example**:
+**예제**:
 ```
-feat: Add file upload support with type-based injection
+feat: 타입 기반 주입을 사용한 파일 업로드 지원 추가
 
-- Implement UploadedFile class
-- Add type hint validation
-- Support Optional[UploadedFile] and list[UploadedFile]
+- UploadedFile 클래스 구현
+- 타입 힌트 검증 추가
+- Optional[UploadedFile] 및 list[UploadedFile] 지원
 ```
 
 ---
 
-**Version**: 0.1.0-alpha  
-**Status**: Active Development 🚧  
-**License**: MIT
+**버전**: 0.1.0-alpha  
+**상태**: 활발한 개발 중 🚧  
+**라이선스**: MIT

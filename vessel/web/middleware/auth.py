@@ -134,29 +134,51 @@ class AuthMiddleware(Middleware):
     컨트롤러 메서드에서 Authentication을 주입받을 수 있도록 합니다.
 
     Usage:
-        # 1. AuthMiddleware 생성 및 인증기 등록
-        auth_middleware = AuthMiddleware()
-        auth_middleware.register(JwtAuthenticator())
-        auth_middleware.register(ApiKeyAuthenticator())
+        # 1. 인증기 구현
+        class JwtAuthenticator(Authenticator):
+            def authenticate(self, request: HttpRequest) -> Authentication:
+                # JWT 토큰 검증 로직
+                token = self.extract_token(request)
+                if self.verify_token(token):
+                    return Authentication(user_id="user123", authenticated=True)
+                return None
+            
+            def supports(self, request: HttpRequest) -> bool:
+                return "Authorization" in request.headers
 
-        # 2. 미들웨어 체인에 등록
-        app.use(auth_middleware)
+        # 2. AuthMiddleware를 Component로 등록하고 인증기 추가
+        @Component
+        class AppAuthMiddleware(AuthMiddleware):
+            def __init__(self):
+                super().__init__()
+                self.register(JwtAuthenticator())
+                self.register(ApiKeyAuthenticator())
 
-        # 3. 컨트롤러에서 사용
+        # 3. MiddlewareChain을 Factory로 생성
+        from vessel.web.middleware.chain import MiddlewareChain
+        from vessel.decorators.di.configuration import Configuration
+        from vessel.decorators.di.factory import Factory
+
+        @Configuration
+        class MiddlewareConfig:
+            @Factory
+            def middleware_chain(self, auth_middleware: AppAuthMiddleware) -> MiddlewareChain:
+                chain = MiddlewareChain()
+                chain.get_default_group().add(auth_middleware)
+                return chain
+
+        # 4. 컨트롤러에서 사용
         @Controller("/api")
         class UserController:
             @Get("/profile")
             def get_profile(self, authentication: Authentication):
                 return {"user_id": authentication.user_id}
-
-    Factory Pattern:
-        @Component
-        def create_auth_middleware() -> AuthMiddleware:
-            middleware = AuthMiddleware()
-            middleware.register(JwtAuthenticator())
-            return middleware
-
-        app.use(create_auth_middleware)
+            
+            @Get("/public")
+            def public_data(self, authentication: Optional[Authentication] = None):
+                if authentication and authentication.authenticated:
+                    return {"content": "premium"}
+                return {"content": "free"}
     """
 
     def __init__(self):

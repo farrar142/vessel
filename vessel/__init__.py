@@ -22,7 +22,7 @@ from vessel.decorators.web.mapping import (
     Patch,
     HttpMethodMappingHandler,
 )
-from vessel.di.container_manager import ContainerManager
+from vessel.di.core.container_manager import ContainerManager
 from vessel.http.request import HttpRequest, HttpResponse
 from vessel.web.application import Application
 from vessel.web.middleware.chain import Middleware, MiddlewareChain, MiddlewareGroup

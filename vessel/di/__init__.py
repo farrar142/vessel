@@ -2,21 +2,27 @@
 Vessel DI Module - Dependency Injection Core
 
 이 모듈은 프레임워크의 DI 기능을 담당합니다.
+
+구조:
+- core/: 핵심 DI 컴포넌트 (Container, ContainerManager, DependencyGraph)
+- utils/: DI 유틸리티 (Scanner, Collector, Initializer, Analyzer, Resolver)
 """
 
-from vessel.di.container import (
+# Core components (공개 API)
+from vessel.di.core import (
     Container,
     ContainerType,
     ContainerHolder,
     get_container_holder,
     get_all_registered_targets,
     register_container,
+    ContainerManager,
+    DependencyGraph,
+    extract_dependencies,
 )
-from vessel.di.container_manager import ContainerManager
-from vessel.di.dependency import DependencyGraph, extract_dependencies
 
-# NOTE: 내부 구현 모듈들(PackageScanner, ContainerCollector, etc.)은
-# 명시적으로 import 해서 사용: from vessel.di.package_scanner import PackageScanner
+# Utils (필요시 명시적 import)
+# from vessel.di.utils import PackageScanner, ContainerCollector, ...
 
 __all__ = [
     # Container

@@ -3,7 +3,7 @@
 """
 
 from typing import Callable, TypeVar
-from vessel.di.container import Container, ContainerType, register_container
+from vessel.di.core.container import Container, ContainerType, register_container
 import inspect
 from typing import get_type_hints
 

@@ -7,7 +7,7 @@ import inspect
 from typing import get_type_hints
 
 from vessel.http.request import HttpRequest, HttpResponse
-from vessel.di.container_manager import ContainerManager
+from vessel.di.core.container_manager import ContainerManager
 
 
 class Route:

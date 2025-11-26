@@ -3,7 +3,7 @@ DependencyAnalyzer - 의존성 분석 책임
 """
 
 from typing import Any, Dict, List, Set, Type
-from vessel.di.dependency import DependencyGraph, extract_dependencies
+from vessel.di.core.dependency import DependencyGraph, extract_dependencies
 
 
 class DependencyAnalyzer:

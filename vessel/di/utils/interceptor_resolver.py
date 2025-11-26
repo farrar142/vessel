@@ -4,7 +4,7 @@ InterceptorResolver - 인터셉터 의존성 해결 책임
 
 from typing import Any, Dict, Set, Type
 from typing import get_type_hints
-from vessel.di.container import get_all_registered_targets, get_container_holder
+from vessel.di.core.container import get_all_registered_targets, get_container_holder
 
 
 class InterceptorResolver:

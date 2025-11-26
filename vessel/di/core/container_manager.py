@@ -4,8 +4,8 @@ ContainerManager - 컨테이너들을 관리하고 초기화하는 핵심 클래
 
 from typing import Any, Dict, List, Type, Optional, TYPE_CHECKING
 
-from vessel.di.container import Container
-from vessel.di.dependency import DependencyGraph
+from vessel.di.core.container import Container
+from vessel.di.core.dependency import DependencyGraph
 
 # 순환 import 방지를 위한 TYPE_CHECKING
 if TYPE_CHECKING:
@@ -14,11 +14,11 @@ if TYPE_CHECKING:
     from vessel.decorators.web.controller import ControllerContainer
 
 # 리팩토링된 책임 분리 클래스들
-from vessel.di.package_scanner import PackageScanner
-from vessel.di.container_collector import ContainerCollector
-from vessel.di.dependency_analyzer import DependencyAnalyzer
-from vessel.di.component_initializer import ComponentInitializer
-from vessel.di.interceptor_resolver import InterceptorResolver
+from vessel.di.utils.package_scanner import PackageScanner
+from vessel.di.utils.container_collector import ContainerCollector
+from vessel.di.utils.dependency_analyzer import DependencyAnalyzer
+from vessel.di.utils.component_initializer import ComponentInitializer
+from vessel.di.utils.interceptor_resolver import InterceptorResolver
 
 
 class ContainerManager:

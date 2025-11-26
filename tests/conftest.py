@@ -14,7 +14,7 @@ sys.path.insert(0, str(project_root))
 @pytest.fixture(autouse=True)
 def cleanup_registry():
     """각 테스트 전후로 전역 컨테이너 레지스트리를 초기화합니다."""
-    import vessel.di.container as container_module
+    import vessel.di.core.container as container_module
 
     # 테스트 실행 전 초기화
     container_module._container_registry.clear()
@@ -28,6 +28,6 @@ def cleanup_registry():
 @pytest.fixture
 def manager():
     """각 테스트마다 새로운 ContainerManager 인스턴스를 제공합니다."""
-    from vessel.di.container_manager import ContainerManager
+    from vessel.di.core.container_manager import ContainerManager
 
     return ContainerManager()

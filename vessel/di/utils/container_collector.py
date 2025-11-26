@@ -3,7 +3,7 @@ ContainerCollector - 컨테이너 수집 책임
 """
 
 from typing import Any, Dict, List, Type
-from vessel.di.container import (
+from vessel.di.core.container import (
     get_all_registered_targets,
     get_container_holder,
     register_container,

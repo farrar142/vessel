@@ -5,7 +5,7 @@ HandlerContainer를 상속받아 HTTP 특화 기능 제공
 
 from typing import Callable, TypeVar, overload, Union
 from vessel.decorators.handler.handler import HandlerContainer
-from vessel.di.container import register_container
+from vessel.di.core.container import register_container
 
 T = TypeVar("T")
 

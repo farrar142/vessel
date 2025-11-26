@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Optional, List
 
 if TYPE_CHECKING:
     from vessel.web.middleware.chain import MiddlewareChain
-    from vessel.di.container_manager import ContainerManager
+    from vessel.di.core.container_manager import ContainerManager
 
 logger = logging.getLogger(__name__)
 

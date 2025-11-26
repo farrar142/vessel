@@ -5,7 +5,7 @@ DefaultValueInjector - 기본 파라미터 타입 변환 및 검증을 처리하
 import inspect
 from typing import Any, Dict, List, Tuple, get_type_hints, get_origin, get_args
 
-from vessel.http.parameter_injection.base import ParameterInjector, InjectionContext
+from vessel.web.router.parameter_injection.base import ParameterInjector, InjectionContext
 
 
 class ValidationError(Exception):

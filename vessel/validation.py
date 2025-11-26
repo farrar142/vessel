@@ -3,7 +3,7 @@ Vessel Validation Module
 
 파라미터 타입 검증 및 변환
 
-Note: ValidationError와 파라미터 주입 로직은 vessel.http.parameter_injection으로 이동되었습니다.
+Note: ValidationError와 파라미터 주입 로직은 vessel.web.router.parameter_injection으로 이동되었습니다.
 이 모듈은 하위 호환성을 위해 유지됩니다.
 """
 
@@ -20,7 +20,7 @@ from typing import (
 )
 
 # ValidationError를 parameter_injection에서 import하여 re-export
-from vessel.http.parameter_injection import ValidationError
+from vessel.web.router.parameter_injection import ValidationError
 
 # 하위 호환성을 위해 re-export
 __all__ = ["ValidationError", "ParameterValidator"]

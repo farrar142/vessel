@@ -8,7 +8,7 @@ from typing import get_type_hints
 
 from vessel.http.request import HttpRequest, HttpResponse
 from vessel.di.core.container_manager import ContainerManager
-from vessel.http.parameter_injection import (
+from vessel.web.router.parameter_injection import (
     ParameterInjectorRegistry,
     HttpRequestInjector,
     HttpHeaderInjector,

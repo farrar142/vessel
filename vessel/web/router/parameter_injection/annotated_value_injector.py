@@ -5,8 +5,8 @@ Abstract base class for injectors that handle Annotated type hints with value ob
 from abc import ABC, abstractmethod
 from typing import Any, Optional, Tuple, get_origin, get_args, Union, Annotated
 
-from vessel.http.parameter_injection.base import ParameterInjector, InjectionContext
-from vessel.http.parameter_injection.default_value_injector import ValidationError
+from vessel.web.router.parameter_injection.base import ParameterInjector, InjectionContext
+from vessel.web.router.parameter_injection.default_value_injector import ValidationError
 
 
 class AnnotatedValueInjector(ParameterInjector, ABC):

@@ -4,10 +4,10 @@ File upload parameter injector
 
 from typing import Any, Optional
 
-from vessel.http.parameter_injection.annotated_value_injector import (
+from vessel.web.router.parameter_injection.annotated_value_injector import (
     AnnotatedValueInjector,
 )
-from vessel.http.parameter_injection.base import InjectionContext
+from vessel.web.router.parameter_injection.base import InjectionContext
 from vessel.http.file_upload import (
     UploadedFile,
     parse_file_from_dict,

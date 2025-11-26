@@ -5,7 +5,7 @@ Registry for parameter injectors
 from typing import List, Dict, Any, Set
 import inspect
 
-from vessel.http.parameter_injection.base import ParameterInjector, InjectionContext
+from vessel.web.router.parameter_injection.base import ParameterInjector, InjectionContext
 from vessel.http.request import HttpRequest
 
 
@@ -46,12 +46,14 @@ class ParameterInjectorRegistry:
 
         Returns:
             Dict[str, Any]: 주입된 파라미터들
-            
+
         Raises:
             ValidationError: 여러 파라미터 검증 실패 시 모든 에러를 모아서 발생
         """
-        from vessel.http.parameter_injection.default_value_injector import ValidationError
-        
+        from vessel.web.router.parameter_injection.default_value_injector import (
+            ValidationError,
+        )
+
         sig = inspect.signature(handler)
         kwargs = {}
         params_to_remove_from_request_data: Set[str] = set()
@@ -94,10 +96,12 @@ class ParameterInjectorRegistry:
 
             if not injected:
                 # 어떤 injector도 처리하지 못한 경우 (should not happen)
-                validation_errors.append({
-                    "field": param_name,
-                    "message": f"No injector found for parameter '{param_name}'"
-                })
+                validation_errors.append(
+                    {
+                        "field": param_name,
+                        "message": f"No injector found for parameter '{param_name}'",
+                    }
+                )
 
         # request_data에서 처리된 파라미터 제거
         for param_name in params_to_remove_from_request_data:

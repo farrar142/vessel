@@ -5,7 +5,7 @@ RequestHandler - HTTP 요청 처리 로직 분리
 import logging
 from typing import TYPE_CHECKING, Optional, Callable, Dict
 from vessel.http.request import HttpRequest, HttpResponse
-from vessel.http.parameter_injection import ValidationError
+from vessel.web.router.parameter_injection import ValidationError
 
 if TYPE_CHECKING:
     from vessel.web.middleware.chain import MiddlewareChain

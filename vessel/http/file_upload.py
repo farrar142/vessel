@@ -92,7 +92,7 @@ class UploadedFile:
         """
         Support UploadedFile["file_key"] syntax for type annotations.
         Returns Annotated[UploadedFile, key] which can be used in type hints.
-        
+
         Example:
             def upload(self, profile: UploadedFile["profile_pic"]):
                 # Will look for file with key "profile_pic" in request data

@@ -69,18 +69,44 @@ class AnnotatedValueInjector(ParameterInjector, ABC):
         pass
 
     @abstractmethod
-    def create_value_object(self, name: str, value: str) -> Any:
+    def create_value_object(self, name: str, value: Any) -> Any:
         """
         Create the value object to return.
 
         Args:
-            name: The name (e.g., header name, cookie name)
-            value: The raw value
+            name: The name (e.g., header name, cookie name, file key)
+            value: The raw value (can be string for headers/cookies, or complex data for files)
 
         Returns:
-            The value object (e.g., HttpHeader instance, HttpCookie instance)
+            The value object (e.g., HttpHeader instance, HttpCookie instance, UploadedFile instance)
         """
         pass
+
+    def supports_list(self) -> bool:
+        """
+        Whether this injector supports list[MarkerType] types.
+        Override this to return True if the injector can handle lists.
+
+        Returns:
+            False by default (headers/cookies don't support lists)
+        """
+        return False
+
+    def create_value_list(self, name: str, values: list) -> list:
+        """
+        Create a list of value objects.
+        Override this if supports_list() returns True.
+
+        Args:
+            name: The name (e.g., file key)
+            values: List of raw values
+
+        Returns:
+            List of value objects
+        """
+        raise NotImplementedError(
+            "Subclass must implement create_value_list() if supports_list() is True"
+        )
 
     @abstractmethod
     def get_error_message(self, name: str, param_name: str) -> str:
@@ -105,6 +131,8 @@ class AnnotatedValueInjector(ParameterInjector, ABC):
         - Annotated[MarkerType, "name"]
         - Optional[MarkerType]
         - Optional[Annotated[MarkerType, "name"]]
+        - list[MarkerType] (if supports_list() returns True)
+        - list[Annotated[MarkerType, "name"]] (if supports_list() returns True)
         """
         param_type = context.param_type
         marker_type = self.get_marker_type()
@@ -133,6 +161,20 @@ class AnnotatedValueInjector(ParameterInjector, ABC):
                     if arg_args and arg_args[0] == marker_type:
                         return True
 
+        # list[MarkerType] 또는 list[Annotated[MarkerType, "name"]] 체크
+        if self.supports_list() and origin is list:
+            args = get_args(param_type)
+            if args:
+                list_item_type = args[0]
+                if list_item_type == marker_type:
+                    return True
+                # list[Annotated[MarkerType, "name"]] 체크
+                list_item_origin = get_origin(list_item_type)
+                if list_item_origin is Annotated:
+                    list_item_args = get_args(list_item_type)
+                    if list_item_args and list_item_args[0] == marker_type:
+                        return True
+
         return False
 
     def inject(self, context: InjectionContext) -> Tuple[Optional[Any], bool]:
@@ -141,10 +183,10 @@ class AnnotatedValueInjector(ParameterInjector, ABC):
 
         Process:
         1. Extract explicit name from Annotated, or use default name
-        2. Check if parameter is Optional
+        2. Check if parameter is Optional or list
         3. Extract raw value from request
         4. Return None for Optional if missing, or raise ValidationError
-        5. Create and return value object
+        5. Create and return value object (or list of value objects)
         """
         param_type = context.param_type
         param_name = context.param_name
@@ -154,6 +196,9 @@ class AnnotatedValueInjector(ParameterInjector, ABC):
 
         # Optional 여부 확인
         is_optional = self._is_optional(param_type)
+
+        # list 여부 확인
+        is_list = self._is_list(param_type)
 
         # 이름 결정
         name = explicit_name if explicit_name else self.get_default_name(param_name)
@@ -174,7 +219,14 @@ class AnnotatedValueInjector(ParameterInjector, ABC):
                     ]
                 )
 
-        # 값 객체 생성
+        # list[MarkerType] 처리
+        if is_list:
+            if not isinstance(value, list):
+                value = [value]
+            value_objects = self.create_value_list(name, value)
+            return value_objects, False
+
+        # 단일 값 객체 생성
         value_object = self.create_value_object(name, value)
         return value_object, False
 
@@ -185,6 +237,7 @@ class AnnotatedValueInjector(ParameterInjector, ABC):
         Handles:
         - Annotated[MarkerType, "name"]
         - Optional[Annotated[MarkerType, "name"]]
+        - list[Annotated[MarkerType, "name"]]
         """
         marker_type = self.get_marker_type()
         origin = get_origin(param_type)
@@ -203,6 +256,21 @@ class AnnotatedValueInjector(ParameterInjector, ABC):
                     arg_args = get_args(arg)
                     if arg_args and arg_args[0] == marker_type and len(arg_args) > 1:
                         return arg_args[1]
+
+        # list[Annotated[MarkerType, "name"]]에서 추출
+        if origin is list:
+            args = get_args(param_type)
+            if args:
+                list_item_type = args[0]
+                list_item_origin = get_origin(list_item_type)
+                if list_item_origin is Annotated:
+                    list_item_args = get_args(list_item_type)
+                    if (
+                        list_item_args
+                        and list_item_args[0] == marker_type
+                        and len(list_item_args) > 1
+                    ):
+                        return list_item_args[1]
 
         return None
 
@@ -235,5 +303,35 @@ class AnnotatedValueInjector(ParameterInjector, ABC):
                         break
 
             return has_none and has_marker
+
+        return False
+
+    def _is_list(self, param_type: Any) -> bool:
+        """
+        Check if the parameter type is list[MarkerType].
+
+        Returns True for:
+        - list[MarkerType]
+        - list[Annotated[MarkerType, "name"]]
+        """
+        if not self.supports_list():
+            return False
+
+        marker_type = self.get_marker_type()
+        origin = get_origin(param_type)
+
+        if origin is list:
+            args = get_args(param_type)
+            if args:
+                list_item_type = args[0]
+                # list[MarkerType]
+                if list_item_type == marker_type:
+                    return True
+                # list[Annotated[MarkerType, "name"]]
+                list_item_origin = get_origin(list_item_type)
+                if list_item_origin is Annotated:
+                    list_item_args = get_args(list_item_type)
+                    if list_item_args and list_item_args[0] == marker_type:
+                        return True
 
         return False

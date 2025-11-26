@@ -14,7 +14,7 @@ class TestApplication:
         """Application 생성 테스트"""
         app = Application("__main__", debug=True, port=9000)
 
-        assert app.packages == ("__main__",)
+        assert app.packages == ["__main__"]  # 이제 list로 변경됨
         assert app.debug is True
         assert app.port == 9000
         assert app.is_initialized is False
@@ -112,8 +112,8 @@ class TestApplication:
             )
 
         app = Application("__main__")
-        app.add_error_handler(ValueError, handle_value_error)
-        app.initialize()
+        app.initialize()  # 먼저 초기화
+        app.add_error_handler(ValueError, handle_value_error)  # 그 다음 에러 핸들러 추가
 
         request = HttpRequest(method="GET", path="/api/error")
         response = app.handle_request(request)

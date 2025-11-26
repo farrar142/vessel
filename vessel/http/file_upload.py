@@ -6,7 +6,7 @@ File Upload Module
 
 import os
 import re
-from typing import Optional
+from typing import Optional, Annotated
 from io import BytesIO
 
 
@@ -86,6 +86,19 @@ class UploadedFile:
 
     def __repr__(self) -> str:
         return f"<UploadedFile: {self.filename} ({self.size} bytes)>"
+
+    @classmethod
+    def __class_getitem__(cls, key: str):
+        """
+        Support UploadedFile["file_key"] syntax for type annotations.
+        Returns Annotated[UploadedFile, key] which can be used in type hints.
+        
+        Example:
+            def upload(self, profile: UploadedFile["profile_pic"]):
+                # Will look for file with key "profile_pic" in request data
+                pass
+        """
+        return Annotated[cls, key]
 
 
 def parse_file_from_dict(file_dict: dict) -> UploadedFile:

@@ -470,3 +470,217 @@ class TestTypeHintBasedFileInjection:
         response = app.handle_request(request_without_file)
         assert response.status_code == 200
         assert response.body["has_file"] is False
+
+
+class TestExplicitFileKeySpecification:
+    """명시적 파일 키 지정 테스트 (Annotated 구문)"""
+
+    def test_bracket_syntax_single_file(self):
+        """UploadedFile["key"] 구문으로 명시적 키 지정"""
+        from vessel.http.file_upload import UploadedFile
+
+        @Controller("/api")
+        class FileController:
+            @Post("/upload")
+            def upload_file(self, avatar: UploadedFile["profile_pic"]) -> dict:
+                # avatar 파라미터는 "profile_pic" 키로 전송된 파일을 받음
+                return {
+                    "param_name": "avatar",
+                    "filename": avatar.filename,
+                    "size": avatar.size,
+                }
+
+        app = Application("__main__")
+        app.initialize()
+
+        request = HttpRequest(
+            method="POST",
+            path="/api/upload",
+            body={
+                "profile_pic": {  # 명시적 키
+                    "filename": "avatar.jpg",
+                    "content": b"fake image data",
+                    "content_type": "image/jpeg",
+                }
+            },
+        )
+
+        response = app.handle_request(request)
+        assert response.status_code == 200
+        assert response.body["param_name"] == "avatar"
+        assert response.body["filename"] == "avatar.jpg"
+        assert response.body["size"] == 15
+
+    def test_bracket_syntax_with_optional(self):
+        """Optional[UploadedFile["key"]] 구문 테스트"""
+        from vessel.http.file_upload import UploadedFile
+        from typing import Optional
+
+        @Controller("/api")
+        class FileController:
+            @Post("/upload")
+            def upload_file(
+                self, avatar: Optional[UploadedFile["profile_pic"]] = None
+            ) -> dict:
+                if avatar is None:
+                    return {"has_file": False}
+                return {"has_file": True, "filename": avatar.filename}
+
+        app = Application("__main__")
+        app.initialize()
+
+        # 파일이 있는 경우
+        request_with_file = HttpRequest(
+            method="POST",
+            path="/api/upload",
+            body={
+                "profile_pic": {
+                    "filename": "avatar.jpg",
+                    "content": b"data",
+                    "content_type": "image/jpeg",
+                }
+            },
+        )
+
+        response = app.handle_request(request_with_file)
+        assert response.status_code == 200
+        assert response.body["has_file"] is True
+
+        # 파일이 없는 경우
+        request_without_file = HttpRequest(
+            method="POST",
+            path="/api/upload",
+            body={},
+        )
+
+        response = app.handle_request(request_without_file)
+        assert response.status_code == 200
+        assert response.body["has_file"] is False
+
+    def test_bracket_syntax_with_list(self):
+        """list[UploadedFile["key"]] 구문 테스트"""
+        from vessel.http.file_upload import UploadedFile
+
+        @Controller("/api")
+        class FileController:
+            @Post("/upload")
+            def upload_files(self, images: list[UploadedFile["gallery_pics"]]) -> dict:
+                return {
+                    "count": len(images),
+                    "filenames": [img.filename for img in images],
+                }
+
+        app = Application("__main__")
+        app.initialize()
+
+        request = HttpRequest(
+            method="POST",
+            path="/api/upload",
+            body={
+                "gallery_pics": [
+                    {
+                        "filename": "photo1.jpg",
+                        "content": b"data1",
+                        "content_type": "image/jpeg",
+                    },
+                    {
+                        "filename": "photo2.jpg",
+                        "content": b"data2",
+                        "content_type": "image/jpeg",
+                    },
+                ]
+            },
+        )
+
+        response = app.handle_request(request)
+        assert response.status_code == 200
+        assert response.body["count"] == 2
+        assert response.body["filenames"] == ["photo1.jpg", "photo2.jpg"]
+
+    def test_mixed_auto_and_bracket_files(self):
+        """자동 변환과 브래킷 구문 혼합 사용"""
+        from vessel.http.file_upload import UploadedFile
+
+        @Controller("/api")
+        class FileController:
+            @Post("/upload")
+            def upload_files(
+                self,
+                document: UploadedFile,  # 자동: "document" 키 사용
+                avatar: UploadedFile["profile_pic"],  # 명시적: "profile_pic" 키 사용
+            ) -> dict:
+                return {
+                    "document_name": document.filename,
+                    "avatar_name": avatar.filename,
+                }
+
+        app = Application("__main__")
+        app.initialize()
+
+        request = HttpRequest(
+            method="POST",
+            path="/api/upload",
+            body={
+                "document": {
+                    "filename": "report.pdf",
+                    "content": b"pdf data",
+                    "content_type": "application/pdf",
+                },
+                "profile_pic": {
+                    "filename": "avatar.jpg",
+                    "content": b"image data",
+                    "content_type": "image/jpeg",
+                },
+            },
+        )
+
+        response = app.handle_request(request)
+        assert response.status_code == 200
+        assert response.body["document_name"] == "report.pdf"
+        assert response.body["avatar_name"] == "avatar.jpg"
+
+    def test_example_from_user(self):
+        """사용자 요구사항 예시: 다른 키로 파일 전송"""
+        from vessel.http.file_upload import UploadedFile
+
+        @Controller("/api")
+        class UserController:
+            @Post("/profile")
+            def update_profile(
+                self,
+                avatar: UploadedFile["user_avatar"],
+                cover: UploadedFile["cover_image"],
+            ) -> dict:
+                return {
+                    "avatar_uploaded": avatar.filename,
+                    "avatar_size": avatar.size,
+                    "cover_uploaded": cover.filename,
+                    "cover_size": cover.size,
+                }
+
+        app = Application("__main__")
+        app.initialize()
+
+        request = HttpRequest(
+            method="POST",
+            path="/api/profile",
+            body={
+                "user_avatar": {
+                    "filename": "my_photo.jpg",
+                    "content": b"avatar data here",
+                    "content_type": "image/jpeg",
+                },
+                "cover_image": {
+                    "filename": "background.png",
+                    "content": b"cover data here",
+                    "content_type": "image/png",
+                },
+            },
+        )
+
+        response = app.handle_request(request)
+        assert response.status_code == 200
+        assert response.body["avatar_uploaded"] == "my_photo.jpg"
+        assert response.body["avatar_size"] == 16
+        assert response.body["cover_uploaded"] == "background.png"
+        assert response.body["cover_size"] == 15

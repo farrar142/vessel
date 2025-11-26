@@ -8,6 +8,10 @@ from vessel.http.parameter_injection.request_injector import HttpRequestInjector
 from vessel.http.parameter_injection.header_injector import HttpHeaderInjector
 from vessel.http.parameter_injection.cookie_injector import HttpCookieInjector
 from vessel.http.parameter_injection.file_injector import FileInjector
+from vessel.http.parameter_injection.default_value_injector import (
+    DefaultValueInjector,
+    ValidationError,
+)
 from vessel.web.auth import AuthenticationInjector
 
 __all__ = [
@@ -18,5 +22,7 @@ __all__ = [
     "HttpHeaderInjector",
     "HttpCookieInjector",
     "FileInjector",
+    "DefaultValueInjector",
+    "ValidationError",
     "AuthenticationInjector",
 ]

@@ -17,7 +17,7 @@ from vessel.web.request_handler import RequestHandler
 
 if TYPE_CHECKING:
     from vessel.web.middleware.chain import MiddlewareChain
-    from vessel.http.router import RouteHandler
+    from vessel.web.router import RouteHandler
 
 logger = logging.getLogger(__name__)
 

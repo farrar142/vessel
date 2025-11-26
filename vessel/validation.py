@@ -2,6 +2,9 @@
 Vessel Validation Module
 
 파라미터 타입 검증 및 변환
+
+Note: ValidationError와 파라미터 주입 로직은 vessel.http.parameter_injection으로 이동되었습니다.
+이 모듈은 하위 호환성을 위해 유지됩니다.
 """
 
 import inspect
@@ -16,29 +19,33 @@ from typing import (
     get_args,
 )
 
+# ValidationError를 parameter_injection에서 import하여 re-export
+from vessel.http.parameter_injection import ValidationError
 
-class ValidationError(Exception):
-    """검증 실패 예외"""
-
-    def __init__(self, errors: List[Dict[str, str]]):
-        self.errors = errors
-        messages = [f"{err['field']}: {err['message']}" for err in errors]
-        super().__init__("; ".join(messages))
-
-    def to_dict(self) -> dict:
-        """에러를 딕셔너리로 변환"""
-        return {"error": "Validation failed", "details": self.errors}
+# 하위 호환성을 위해 re-export
+__all__ = ["ValidationError", "ParameterValidator"]
 
 
 class ParameterValidator:
-    """파라미터 검증 및 변환"""
+    """
+    [DEPRECATED] 파라미터 검증 및 변환
+
+    Note: 이 클래스는 deprecated 되었습니다.
+    파라미터 주입 및 검증은 이제 vessel.http.parameter_injection.DefaultValueInjector를 통해
+    자동으로 처리됩니다. RouteHandler가 자동으로 모든 injector를 설정합니다.
+    """
 
     @staticmethod
     def validate_and_convert(
-        handler_func: Callable, request_data: Dict[str, Any], skip_params: set = None
+        handler_func: Callable,
+        request_data: Dict[str, Any],
+        skip_params: set | None = None,
     ) -> Dict[str, Any]:
         """
-        핸들러 함수의 파라미터를 검증하고 변환
+        [DEPRECATED] 핸들러 함수의 파라미터를 검증하고 변환
+
+        이 메서드는 하위 호환성을 위해 유지됩니다.
+        새 코드에서는 DefaultValueInjector를 사용하세요.
 
         Args:
             handler_func: 핸들러 함수

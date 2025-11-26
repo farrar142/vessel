@@ -110,7 +110,7 @@ class ApplicationInitializer:
 
     def _create_route_handler(self):
         """RouteHandler 생성"""
-        from vessel.http.router import RouteHandler
+        from vessel.web.router import RouteHandler
 
         return RouteHandler(self.container_manager)
 

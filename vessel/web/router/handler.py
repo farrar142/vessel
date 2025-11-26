@@ -8,13 +8,14 @@ from typing import get_type_hints
 
 from vessel.http.request import HttpRequest, HttpResponse
 from vessel.di.core.container_manager import ContainerManager
-from vessel.validation import ParameterValidator
 from vessel.http.parameter_injection import (
     ParameterInjectorRegistry,
     HttpRequestInjector,
     HttpHeaderInjector,
     HttpCookieInjector,
     FileInjector,
+    DefaultValueInjector,
+    ValidationError,
     AuthenticationInjector,
 )
 from vessel.web.auth import AuthenticationException
@@ -57,6 +58,7 @@ class RouteHandler:
         self.injector_registry.register(HttpHeaderInjector())
         self.injector_registry.register(HttpCookieInjector())
         self.injector_registry.register(FileInjector())
+        self.injector_registry.register(DefaultValueInjector())  # 가장 낮은 우선순위
 
     def _register_routes(self):
         """컨트롤러들에서 라우트 정보 수집"""
@@ -203,8 +205,7 @@ class RouteHandler:
     def _invoke_handler(self, route: Route, request: HttpRequest) -> Any:
         """
         핸들러 메서드를 실행
-        - Registry 패턴으로 파라미터 주입 처리
-        - 일반 파라미터 validation
+        - Registry 패턴으로 모든 파라미터 주입 처리 (validation 포함)
         """
         handler = route.handler
 
@@ -217,17 +218,10 @@ class RouteHandler:
         except:
             hints = {}
 
-        # 레지스트리를 통한 파라미터 주입
+        # 레지스트리를 통한 모든 파라미터 주입 (DefaultValueInjector가 validation 처리)
         kwargs = self.injector_registry.inject_parameters(
             handler, request, request_data, hints
         )
-
-        # Validation 수행 (이미 주입된 파라미터는 제외)
-        skip_params = set(kwargs.keys())
-        validated_params = ParameterValidator.validate_and_convert(
-            handler, request_data, skip_params
-        )
-        kwargs.update(validated_params)
 
         # 핸들러 실행
         return handler(**kwargs)

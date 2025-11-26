@@ -46,10 +46,16 @@ class ParameterInjectorRegistry:
 
         Returns:
             Dict[str, Any]: 주입된 파라미터들
+            
+        Raises:
+            ValidationError: 여러 파라미터 검증 실패 시 모든 에러를 모아서 발생
         """
+        from vessel.http.parameter_injection.default_value_injector import ValidationError
+        
         sig = inspect.signature(handler)
         kwargs = {}
         params_to_remove_from_request_data: Set[str] = set()
+        validation_errors = []  # 검증 에러 수집
 
         for param_name, param in sig.parameters.items():
             if param_name == "self":
@@ -68,19 +74,38 @@ class ParameterInjectorRegistry:
             )
 
             # 우선순위 순으로 injector 실행
+            injected = False
             for injector in self._injectors:
                 if injector.can_inject(context):
-                    value, should_remove = injector.inject(context)
-                    kwargs[param_name] = value
+                    try:
+                        value, should_remove = injector.inject(context)
+                        kwargs[param_name] = value
 
-                    if should_remove and param_name in request_data:
-                        params_to_remove_from_request_data.add(param_name)
+                        if should_remove and param_name in request_data:
+                            params_to_remove_from_request_data.add(param_name)
 
-                    break  # 첫 번째 매칭된 injector만 실행
+                        injected = True
+                        break  # 첫 번째 매칭된 injector만 실행
+                    except ValidationError as e:
+                        # ValidationError는 모아서 나중에 한 번에 발생
+                        validation_errors.extend(e.errors)
+                        injected = True
+                        break
+
+            if not injected:
+                # 어떤 injector도 처리하지 못한 경우 (should not happen)
+                validation_errors.append({
+                    "field": param_name,
+                    "message": f"No injector found for parameter '{param_name}'"
+                })
 
         # request_data에서 처리된 파라미터 제거
         for param_name in params_to_remove_from_request_data:
             if param_name in request_data:
                 del request_data[param_name]
+
+        # 검증 에러가 있으면 한 번에 발생
+        if validation_errors:
+            raise ValidationError(validation_errors)
 
         return kwargs

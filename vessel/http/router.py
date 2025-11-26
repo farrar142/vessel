@@ -15,6 +15,10 @@ from vessel.http.parameter_injection import (
     HttpHeaderInjector,
     HttpCookieInjector,
     FileInjector,
+    AuthenticationInjector,
+)
+from vessel.http.parameter_injection.authentication_injector import (
+    AuthenticationException,
 )
 
 
@@ -51,6 +55,7 @@ class RouteHandler:
         """파라미터 주입 레지스트리 설정"""
         self.injector_registry = ParameterInjectorRegistry()
         self.injector_registry.register(HttpRequestInjector())
+        self.injector_registry.register(AuthenticationInjector())
         self.injector_registry.register(HttpHeaderInjector())
         self.injector_registry.register(HttpCookieInjector())
         self.injector_registry.register(FileInjector())
@@ -188,6 +193,10 @@ class RouteHandler:
                 return result
             else:
                 return HttpResponse(body=result, status_code=200)
+
+        except AuthenticationException as e:
+            # 인증 실패 시 401 에러 반환
+            return HttpResponse(status_code=e.status_code, body={"message": e.message})
 
         except Exception as e:
             # 에러를 Application으로 전파 (Application의 _handle_error에서 처리)

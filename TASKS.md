@@ -1,208 +1,199 @@
-# Vessel Framework - 개발 작업 목록
+# Vessel Framework - 작업 현황
 
-> 최종 업데이트: 2025-11-26 | 버전: 0.1.0-alpha
+> 최종 업데이트: 2025-11-26  
+> 버전: 0.1.0-alpha  
+> 테스트: **114/114 통과** ✅
+
+---
+
+## � 문서
+
+### 사용 가이드 (docs/)
+
+1. **[01_dependency_injection.md](docs/01_dependency_injection.md)** - DI 시스템
+   - @Component, @Configuration, @Factory
+   - 필드 주입 (Field Injection)
+   - 의존성 그래프 및 순환 감지
+
+2. **[02_web_framework.md](docs/02_web_framework.md)** - 웹 프레임워크
+   - @Controller, HTTP 메서드 데코레이터
+   - 경로/쿼리 파라미터, 요청 본문
+   - 타입 변환 및 검증
+
+3. **[03_file_upload.md](docs/03_file_upload.md)** - 파일 업로드
+   - UploadedFile 클래스
+   - 단일/다중 파일 업로드
+   - 파일 검증 (크기, MIME, 확장자)
+
+4. **[04_http_injection.md](docs/04_http_injection.md)** - HTTP 주입
+   - HttpHeader, HttpCookie 타입
+   - 자동 이름 변환
+   - 브래킷 문법
+
+5. **[05_authentication.md](docs/05_authentication.md)** - 인증 시스템
+   - Authenticator 인터페이스
+   - AuthMiddleware, Authentication
+   - JWT, API Key 예제
+
+6. **[06_middleware.md](docs/06_middleware.md)** - 미들웨어
+   - Middleware 인터페이스
+   - 조기 반환 (Early Return)
+   - CORS, Logging, Timing 예제
 
 ---
 
 ## 📊 현재 상태
 
-- **104/104 테스트 통과** ✅
-- **39개 파일** - 잘 구조화된 아키텍처
-- **완료된 핵심 기능**: DI, Web, Middleware, Validation, FileUpload, HTTP Injection, Registry Pattern
+- **114/114 테스트 통과** ✅
+- **완료된 핵심 기능**: DI, Web Framework, Middleware, Authentication, File Upload, HTTP Injection, Parameter Injection
 
 ---
 
-## ✅ 완료된 단계
-
-### Phase 1: 핵심 DI 프레임워크 ✅
-- Container, DependencyGraph, ContainerManager
-- @Component, @Configuration, @Factory
-- 타입 기반 의존성 주입
-- 싱글톤 패턴
-
-### Phase 2: 웹 프레임워크 ✅
-- HttpRequest/HttpResponse, RouteHandler
-- 자동 타입 변환을 포함한 경로 매개변수
-- @Controller, @Get, @Post, @Put, @Delete, @Patch
-- 조기 반환을 지원하는 미들웨어 체인
-- Application 파사드, DevServer
-
-### Phase 3: 코드 품질 ✅
-- SRP: Application을 4개 클래스로 분리
-- 기능별로 vessel/ 재구조화
-- di/core와 di/utils 분리
-
-### Phase 4: 핵심 기능 ✅
-- **✅ Validation** (13 tests)
-  - ParameterValidator: 타입 변환 & 검증
-  - ValidationError: 자동 400 응답
-  - 상세한 메시지와 함께 다중 오류 수집
-  - Query/Path/Body 매개변수 검증
-  - **강력한 타입 지정**: 타입 힌트 누락 → 오류
-  
-- **✅ File Upload** (12 tests)
-  - UploadedFile 클래스: read(), save(), secure_filename()
-  - **타입 기반 주입**: file: UploadedFile
-  - 지원: UploadedFile, Optional[UploadedFile], list[UploadedFile]
-  - 파일 크기 검증, MIME 타입 확인
-  - 파일명 정제 (경로 탐색 공격 방지)
-  - **강력한 타입 지정**: 파일 매개변수는 명시적 타입 힌트 필요
-
-- **✅ HTTP Injection** (19 tests)
-  - HttpHeader, HttpCookie 타입 마커
-  - **3가지 문법 지원**:
-    - 자동 변환: `user_agent: HttpHeader`
-    - 명시적 호출: `agent: HttpHeader = HttpHeader("User-Agent")`
-    - 브래킷 문법: `agent: HttpHeader["User-Agent"]`
-  - Optional 매개변수 지원
-  - Annotated 타입 지원
-
-### Phase 5: 아키텍처 개선 ✅
-- **✅ Registry Pattern** (리팩토링)
-  - 모듈식 파라미터 주입 시스템
-  - router.py 간소화 (265+ 라인 → 31 라인)
-  - 개별 Injector 구현:
-    * HttpRequestInjector (우선순위: 0)
-    * HttpHeaderInjector (우선순위: 100)
-    * HttpCookieInjector (우선순위: 101)
-    * FileInjector (우선순위: 200)
-  - **아키텍처 이점**:
-    - 단일 책임: 각 injector는 하나의 타입 처리
-    - 확장성: ParameterInjector 구현으로 새 타입 추가
-    - 테스트 가능성: 각 injector를 독립적으로 테스트
-    - 유지보수성: 우선순위 시스템으로 명확한 관심사 분리
-
----
-
-## 📁 프로젝트 구조
+## 프로젝트 구조
 
 ```
 vessel/
-├── di/
-│   ├── core/           # Container, ContainerManager, DependencyGraph
-│   └── utils/          # Scanner, Collector, Initializer, Analyzer
-├── decorators/
-│   ├── di/             # @Component, @Configuration, @Factory
-│   ├── web/            # @Controller, HTTP mappings
-│   └── handler/        # HandlerContainer, Interceptors
-├── http/
-│   ├── request.py           # HttpRequest, HttpResponse
-│   ├── router.py            # RouteHandler (리팩토링됨)
-│   ├── file_upload.py       # UploadedFile
-│   ├── injection_types.py   # HttpHeader, HttpCookie ✨ NEW
-│   ├── parameter_injection/ # Registry 패턴 ✨ NEW
-│   │   ├── base.py          # ParameterInjector, InjectionContext
-│   │   ├── registry.py      # ParameterInjectorRegistry
-│   │   ├── request_injector.py
-│   │   ├── header_injector.py
-│   │   ├── cookie_injector.py
-│   │   └── file_injector.py
-│   └── validation.py        # ParameterValidator, ValidationError
-└── web/
-    ├── application.py, initializer.py, request_handler.py, server.py
-    └── middleware/          # MiddlewareChain, CorsMiddleware
+├── di/                          # 의존성 주입 레이어
+│   ├── core/                    # Container, DependencyGraph, ContainerManager
+│   └── decorators/              # @Component, @Configuration, @Factory
+│
+├── decorators/                  # 전역 데코레이터
+│   ├── di/                      # DI 데코레이터
+│   ├── web/                     # @Controller, @Get, @Post, ...
+│   └── handler/                 # HandlerContainer
+│
+└── web/                         # 웹 애플리케이션 레이어
+    ├── http/                    # HTTP 프로토콜
+    │   ├── request.py           # HttpRequest, HttpResponse
+    │   ├── file_upload.py       # UploadedFile
+    │   └── injection_types.py   # HttpHeader, HttpCookie
+    │
+    ├── router/                  # 라우팅 시스템
+    │   ├── handler.py           # RouteHandler, Route
+    │   └── parameter_injection/ # 파라미터 주입 시스템 (9개 파일)
+    │       ├── base.py
+    │       ├── registry.py
+    │       ├── default_value_injector.py
+    │       ├── request_injector.py
+    │       ├── header_injector.py
+    │       ├── cookie_injector.py
+    │       ├── file_injector.py
+    │       └── annotated_value_injector.py
+    │
+    ├── auth/                    # 인증 시스템
+    │   ├── middleware.py        # AuthMiddleware
+    │   └── injector.py          # AuthenticationInjector
+    │
+    ├── middleware/              # 미들웨어 체인
+    │   ├── chain.py
+    │   └── builtins.py
+    │
+    ├── application.py           # Application 클래스
+    ├── request_handler.py       # RequestHandler
+    └── server.py                # DevServer
 ```
 
 ---
 
-## 🚀 다음 작업
+## 핵심 기능
 
-### Phase 6: 개발자 경험
+### ✅ 완료됨
 
-#### CLI 도구
-- [ ] `vessel create my-project` - 프로젝트 스캐폴딩
-- [ ] `vessel new controller UserController` - 코드 생성
+**DI (Dependency Injection)**
+- @Component, @Configuration, @Factory
+- 필드 주입 (Field Injection) - 타입 힌트 기반
+- 의존성 그래프, 순환 감지
+- 자동 싱글톤 관리
 
-#### Dev Server
-- [ ] **Hot Reload** - 파일 변경 감지
-- [ ] **향상된 오류 페이지** - 구문 강조가 있는 스택 추적
-- [ ] **컬러풀한 로깅** - 개선된 로그 출력
+**Web Framework**
+- @Controller, @Get, @Post, @Put, @Delete, @Patch
+- 경로/쿼리 파라미터 (자동 타입 변환)
+- Request Body (dict, dataclass)
+- HttpRequest, HttpResponse
 
-#### 디버깅
-- [ ] **DI Inspector** - 컴포넌트 그래프 시각화
-- [ ] **Health Check Endpoint** - `/health`
+**File Upload**
+- UploadedFile 클래스 (read, save, secure_filename)
+- 단일/다중 파일 업로드 (List[UploadedFile])
+- 크기/MIME/확장자 검증
 
-#### 테스팅
-- [ ] **@WebTest 데코레이터** - 테스트 유틸리티
-- [ ] **Test Client** - 테스트용 HTTP 클라이언트
-- [ ] **Mock Components** - 의존성 모킹
+**HTTP Injection**
+- HttpHeader, HttpCookie 타입 주입
+- 자동 이름 변환 (snake_case → Title-Case)
+- 브래킷 문법 (`HttpHeader["User-Agent"]`)
 
----
+**Authentication**
+- Authenticator 인터페이스
+- AuthMiddleware, Authentication 객체
+- 여러 Authenticator 등록 가능
+- 자동 401 응답
 
-### Phase 7: 프로덕션 준비
+**Middleware**
+- Middleware 인터페이스
+- 조기 반환 (Early Return)
+- 의존성 주입 지원
+- 자동 감지 (@Component)
 
-#### 성능
-- [ ] **비동기 지원** - `async def` 핸들러, ASGI
-- [ ] **캐싱** - `@Cacheable`, Redis 통합
-
-#### 보안
-- [ ] **인증/권한** - JWT, `@Secured(roles=["admin"])`
-- [ ] **CSRF 보호** - 토큰 생성/검증
-
-#### 모니터링
-- [ ] **메트릭** - Prometheus 통합
-- [ ] **구조화된 로깅** - structlog (JSON)
-
----
-
-### Phase 8: 생태계
-
-- [ ] **ORM 통합** - SQLAlchemy, `@Repository`
-- [ ] **데이터베이스 마이그레이션** - Alembic
-- [ ] **메시징** - RabbitMQ/Kafka, `@MessageListener`
-- [ ] **HTTP Client** - `@HttpClient` 데코레이터
+**Parameter Injection System**
+- Registry 패턴
+- 우선순위 시스템
+- 확장 가능한 Injector 구조
+- ValidationError 자동 처리
 
 ---
 
-### Phase 9: 웹 기능 완성
+## 🚀 로드맵
 
-#### 정적 파일 & 스트리밍
-- [ ] **Static Files** - `app.serve_static("/static", "./public")`
-- [ ] **Response Streaming** - 대용량 파일 다운로드
+### 다음 단계
 
-#### 추가 미들웨어
-- [ ] **CompressionMiddleware** - gzip 압축
-- [ ] **RateLimitMiddleware** - 속도 제한
-- [ ] **SessionMiddleware** - 세션 관리
-- [ ] **SecurityHeadersMiddleware** - 보안 헤더
-- [ ] **Middleware Priority** - 순서 제어
+1. **비동기 지원** - async/await, ASGI
+2. **ORM 통합** - SQLAlchemy
+3. **테스트 유틸리티** - @WebTest, TestClient
+4. **프로덕션 기능** - Logging, Metrics, Health Check
+5. **문서 개선** - 더 많은 예제, 튜토리얼
 
 ---
 
-## 📈 테스트 커버리지
+## 테스트 현황
 
-| 파일 | 테스트 | 상태 |
-|------|-------|--------|
-| test_application.py | 12 | ✅ |
-| test_component.py | 5 | ✅ |
-| test_container.py | 4 | ✅ |
-| test_dependency.py | 9 | ✅ |
-| test_handler.py | 14 | ✅ |
-| test_integration.py | 7 | ✅ |
-| test_integration_advanced.py | 5 | ✅ |
-| test_middleware_integration.py | 4 | ✅ |
-| test_validation.py | 13 | ✅ |
-| test_file_upload.py | 12 | ✅ |
-| test_http_injection.py | 19 | ✅ |
-| **합계** | **104** | **✅** |
+**총 114개 테스트 통과** ✅
 
----
-
-## 🛠 기술 스택
-
-**현재**: Python 3.12+, pytest
-
-**향후**: Click, watchdog, asyncio, Redis, SQLAlchemy
+| 테스트 파일 | 테스트 수 |
+|-----------|---------|
+| test_application.py | 12 |
+| test_authentication.py | 8 |
+| test_component.py | 5 |
+| test_container.py | 4 |
+| test_dependency.py | 9 |
+| test_file_upload.py | 17 |
+| test_handler.py | 14 |
+| test_http_injection.py | 16 |
+| test_integration.py | 7 |
+| test_integration_advanced.py | 5 |
+| test_middleware_integration.py | 4 |
+| test_validation.py | 13 |
 
 ---
 
-## 🚨 설계 제약사항
+## 설계 원칙
 
-- **❌ 생성자 주입 없음**: 필드 주입만 사용 (명시적 설계 선택)
-- **❌ 지연 초기화 없음**: 컴포넌트는 즉시 초기화
-- **❌ 스코프 확장 없음**: 싱글톤만 지원 (prototype/request 스코프 없음)
-- **❌ Qualifier 지원 없음**: 타입당 단일 빈
-- **❌ 템플릿 엔진 없음**: API 중심 프레임워크 (Jinja2 없음)
+### ✅ 지원하는 기능
+
+- **필드 주입** - 타입 힌트 기반 의존성 주입
+- **싱글톤** - 모든 컴포넌트는 싱글톤으로 관리
+- **자동 스캔** - @Component, @Controller 자동 감지
+- **타입 안전** - 타입 힌트 필수, 자동 변환
+- **미들웨어 체인** - 요청/응답 전후 처리
+- **파라미터 주입** - Query, Path, Body, Header, Cookie, File
+- **인증 시스템** - Authenticator 인터페이스 기반
+
+### ❌ 지원하지 않는 기능
+
+- **생성자 주입** - 필드 주입만 지원 (의도적 설계)
+- **Optional 의존성** - 모든 의존성은 필수
+- **Prototype 스코프** - 싱글톤만 지원
+- **Qualifier** - 타입당 하나의 빈만 가능
+- **템플릿 엔진** - API 중심 (Jinja2 미지원)
+- **비동기** - 동기 방식만 지원 (추후 계획)
 - **✅ 강력한 타입 지정**: 모든 매개변수는 타입 힌트 필수 (self/HttpRequest 제외)
 
 ---

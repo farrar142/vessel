@@ -7,7 +7,7 @@ from vessel.decorators.web.controller import Controller
 from vessel.decorators.web.mapping import Get, Post
 from vessel.web.application import Application
 from vessel.http.request import HttpRequest
-from vessel.web.middleware.auth import AuthMiddleware, Authentication, Authenticator
+from vessel.web.auth import AuthMiddleware, Authentication, Authenticator
 from vessel.decorators.di.component import Component
 
 

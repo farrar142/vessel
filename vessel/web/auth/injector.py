@@ -4,7 +4,7 @@ Authentication Parameter Injector
 
 from typing import get_origin, get_args, Optional, Tuple, Any
 from vessel.http.parameter_injection.base import ParameterInjector, InjectionContext
-from vessel.web.middleware.auth import Authentication
+from vessel.web.auth.middleware import Authentication
 
 
 class AuthenticationException(Exception):

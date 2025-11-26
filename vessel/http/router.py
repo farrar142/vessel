@@ -17,9 +17,7 @@ from vessel.http.parameter_injection import (
     FileInjector,
     AuthenticationInjector,
 )
-from vessel.http.parameter_injection.authentication_injector import (
-    AuthenticationException,
-)
+from vessel.web.auth import AuthenticationException
 
 
 class Route:

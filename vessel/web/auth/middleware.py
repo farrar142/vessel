@@ -142,7 +142,7 @@ class AuthMiddleware(Middleware):
                 if self.verify_token(token):
                     return Authentication(user_id="user123", authenticated=True)
                 return None
-            
+
             def supports(self, request: HttpRequest) -> bool:
                 return "Authorization" in request.headers
 
@@ -173,7 +173,7 @@ class AuthMiddleware(Middleware):
             @Get("/profile")
             def get_profile(self, authentication: Authentication):
                 return {"user_id": authentication.user_id}
-            
+
             @Get("/public")
             def public_data(self, authentication: Optional[Authentication] = None):
                 if authentication and authentication.authenticated:

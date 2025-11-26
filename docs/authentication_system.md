@@ -9,7 +9,7 @@
 사용자 인증 정보를 담는 기본 클래스입니다. 사용자는 이 클래스를 확장하여 자신만의 인증 정보를 정의할 수 있습니다.
 
 ```python
-from vessel.web.middleware.auth import Authentication
+from vessel.web.auth import Authentication
 
 # 기본 사용
 auth = Authentication(user_id="user123", authenticated=True)
@@ -38,7 +38,7 @@ class UserAuthentication(Authentication):
 프레임워크는 인증기의 인터페이스만 제공하며, JWT, HTTP Bearer, Token 등의 구체적인 인증 방식은 사용자가 구현합니다.
 
 ```python
-from vessel.web.middleware.auth import Authenticator, Authentication
+from vessel.web.auth import Authenticator, Authentication
 from vessel.http.request import HttpRequest
 
 class JwtAuthenticator(Authenticator):
@@ -76,7 +76,7 @@ class JwtAuthenticator(Authenticator):
 등록된 인증기들을 사용하여 요청을 인증하고, 결과를 request 객체에 저장합니다.
 
 ```python
-from vessel.web.middleware.auth import AuthMiddleware
+from vessel.web.auth import AuthMiddleware
 
 # 인증 미들웨어 생성
 auth_middleware = AuthMiddleware()
@@ -102,7 +102,7 @@ auth_middleware.register(ApiKeyAuthenticator())
 from vessel.decorators.di.component import Component
 from vessel.decorators.di.configuration import Configuration
 from vessel.decorators.di.factory import Factory
-from vessel.web.middleware.auth import AuthMiddleware, Authenticator, Authentication
+from vessel.web.auth import AuthMiddleware, Authenticator, Authentication
 from vessel.web.middleware.chain import MiddlewareChain
 from vessel.http.request import HttpRequest
 
@@ -256,7 +256,7 @@ def content(self, authentication: Optional[Authentication] = None) -> dict:
 import jwt
 from datetime import datetime, timedelta
 from vessel.decorators.di.component import Component
-from vessel.web.middleware.auth import Authenticator, Authentication
+from vessel.web.auth import Authenticator, Authentication
 
 @Component
 class JwtAuthenticator(Authenticator):

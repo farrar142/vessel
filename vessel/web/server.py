@@ -6,6 +6,7 @@ import logging
 import http.server
 import socketserver
 import json
+import asyncio
 from typing import TYPE_CHECKING
 from vessel.web.http.request import HttpRequest
 
@@ -86,8 +87,9 @@ class DevServer:
                         body=json.loads(body_bytes) if body_bytes else {},
                     )
 
-                    # 요청 처리
-                    response = app.handle_request(request)
+                    # 요청 처리 (async 지원)
+                    # asyncio.run()을 사용하여 async 함수를 동기적으로 실행
+                    response = asyncio.run(app.handle_request(request))
 
                     # 응답 전송
                     self.send_response(response.status_code)

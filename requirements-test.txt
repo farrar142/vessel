@@ -1,5 +1,5 @@
-"""
-Requirements file for pytest
-"""
+# Requirements file for pytest
 pytest>=7.4.0
 pytest-cov>=4.1.0
+pytest-asyncio>=0.21.0
+asgiref>=3.7.0

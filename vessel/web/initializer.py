@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Optional, List
 if TYPE_CHECKING:
     from vessel.web.middleware.chain import MiddlewareChain
     from vessel.di.core.container_manager import ContainerManager
+    from vessel.web.router import RouteHandler
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +31,7 @@ class ApplicationInitializer:
 
     def initialize(
         self, packages: List[str]
-    ) -> tuple[Optional["MiddlewareChain"], object]:
+    ) -> tuple["MiddlewareChain", "RouteHandler"]:
         """
         애플리케이션 초기화 수행
 
@@ -42,7 +43,7 @@ class ApplicationInitializer:
         """
         if self.is_initialized:
             logger.warning("Application already initialized")
-            return None, None
+            raise RuntimeError("Application already initialized")
 
         logger.info("Initializing Vessel Application...")
 
@@ -79,7 +80,7 @@ class ApplicationInitializer:
             logger.info("Scanning __main__ package")
             self.container_manager.component_scan("__main__")
 
-    def _detect_middleware_chain(self) -> Optional["MiddlewareChain"]:
+    def _detect_middleware_chain(self) -> "MiddlewareChain":
         """MiddlewareChain 자동 감지"""
         try:
             from vessel.web.middleware.chain import MiddlewareChain
@@ -99,14 +100,14 @@ class ApplicationInitializer:
                 return middleware_chain
             else:
                 logger.debug("No MiddlewareChain found in container")
-                return None
+                return MiddlewareChain()
 
         except ImportError:
             logger.debug("MiddlewareChain not available")
-            return None
+            return MiddlewareChain()
         except Exception as e:
             logger.warning(f"Failed to detect MiddlewareChain: {e}")
-            return None
+            return MiddlewareChain()
 
     def _create_route_handler(self):
         """RouteHandler 생성"""

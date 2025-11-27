@@ -8,8 +8,9 @@ Spring Boot의 SpringApplication과 유사한 역할
 - DevServer: 개발 서버
 """
 
-from typing import TYPE_CHECKING, Optional, Any, Callable
+from typing import TYPE_CHECKING, Optional, Any, Callable, Protocol
 import logging
+import inspect
 from vessel.di.core.container_manager import ContainerManager
 from vessel.web.http.request import HttpRequest, HttpResponse
 from vessel.web.initializer import ApplicationInitializer
@@ -36,6 +37,12 @@ class Application:
     - RequestHandler: 요청 처리 담당
     - DevServer: 개발 서버 담당
     """
+
+    @property
+    def request_handler(self) -> RequestHandler:
+        if not self._request_handler:
+            raise RuntimeError("Application not initialized. Call initialize() first.")
+        return self._request_handler
 
     def __init__(
         self,
@@ -130,15 +137,15 @@ class Application:
         Returns:
             Application: self (메서드 체이닝용)
         """
-        if not self._request_handler:
-            raise RuntimeError("Application not initialized. Call initialize() first.")
-
-        self._request_handler.add_error_handler(exception_type, handler)
+        self.request_handler.add_error_handler(exception_type, handler)
         return self
 
     def handle_request(self, request: HttpRequest) -> HttpResponse:
         """
-        HTTP 요청 처리
+        HTTP 요청 처리 (sync/async 호환)
+
+        동기 호출 시: 자동으로 async 함수를 동기적으로 실행
+        비동기 호출 시: await로 호출 가능
 
         RequestHandler에 위임
 
@@ -147,11 +154,28 @@ class Application:
 
         Returns:
             HttpResponse: HTTP 응답
-        """
-        if not self.is_initialized or not self._request_handler:
-            raise RuntimeError("Application not initialized. Call initialize() first.")
 
-        return self._request_handler.handle_request(request)
+        Examples:
+            >>> # 동기 호출 (기존 코드 호환)
+            >>> response = app.handle_request(request)
+            >>>
+            >>> # 비동기 호출 (새로운 스타일)
+            >>> response = await app.handle_request(request)
+        """
+
+        # async 함수를 호출하여 코루틴 얻기
+        coro = self.request_handler.handle_request(request)
+
+        # 현재 이벤트 루프가 실행 중인지 확인
+        import asyncio
+
+        try:
+            loop = asyncio.get_running_loop()
+            # 이미 async 컨텍스트에 있으면 코루틴 반환 (await 가능)
+            return coro  # type: ignore
+        except RuntimeError:
+            # 동기 컨텍스트에 있으면 asyncio.run으로 실행
+            return asyncio.run(coro)
 
     def get_instance(self, target_type: type) -> Any:
         """
@@ -168,7 +192,10 @@ class Application:
 
         return self.container_manager.get_instance(target_type)
 
-    def run(self, server: Optional[Any] = None):
+    class ExternalServer(Protocol):
+        def run(self, server: Optional[Any] = None) -> None: ...
+
+    def run(self, server: Optional[ExternalServer] = None):
         """
         애플리케이션 실행
 

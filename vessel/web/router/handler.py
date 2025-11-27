@@ -8,6 +8,7 @@ from typing import get_type_hints
 
 from vessel.web.http.request import HttpRequest, HttpResponse
 from vessel.di.core.container_manager import ContainerManager
+from vessel.utils.async_support import run_sync_or_async
 from vessel.web.router.parameter_injection import (
     ParameterInjectorRegistry,
     HttpRequestInjector,
@@ -179,11 +180,31 @@ class RouteHandler:
 
     def handle_request(self, request: HttpRequest) -> HttpResponse:
         """
-        HTTP 요청을 처리
+        HTTP 요청을 처리 (sync/async 호환)
         1. 라우트 찾기
         2. 핸들러 메서드의 파라미터 분석
         3. 파라미터에 값 주입
-        4. 핸들러 실행
+        4. 핸들러 실행 (sync/async 자동 처리)
+
+        동기/비동기 모두 지원하므로 기존 코드와 호환됩니다.
+        """
+        # async 함수 호출하여 코루틴 얻기
+        coro = self._handle_request_async(request)
+
+        # 현재 이벤트 루프가 실행 중인지 확인
+        import asyncio
+
+        try:
+            loop = asyncio.get_running_loop()
+            # 이미 async 컨텍스트에 있으면 코루틴 반환
+            return coro  # type: ignore
+        except RuntimeError:
+            # 동기 컨텍스트에 있으면 asyncio.run으로 실행
+            return asyncio.run(coro)
+
+    async def _handle_request_async(self, request: HttpRequest) -> HttpResponse:
+        """
+        내부 async 핸들러 (실제 요청 처리)
         """
         route = self.find_route(request.method, request.path)
 
@@ -196,8 +217,8 @@ class RouteHandler:
             request.path_params = path_params
 
         try:
-            # 핸들러 메서드 실행
-            result = self._invoke_handler(route, request)
+            # 핸들러 메서드 실행 (sync/async 자동 처리)
+            result = await self._invoke_handler(route, request)
 
             # 결과를 HttpResponse로 변환
             if isinstance(result, HttpResponse):
@@ -213,10 +234,12 @@ class RouteHandler:
             # 에러를 Application으로 전파 (Application의 _handle_error에서 처리)
             raise
 
-    def _invoke_handler(self, route: Route, request: HttpRequest) -> Any:
+    async def _invoke_handler(self, route: Route, request: HttpRequest) -> Any:
         """
-        핸들러 메서드를 실행
+        핸들러 메서드를 실행 (sync/async 자동 처리)
         - Registry 패턴으로 모든 파라미터 주입 처리 (validation 포함)
+        - sync 함수는 자동으로 async로 변환하여 실행
+        - async 함수는 직접 await
         """
         handler = route.handler
 
@@ -234,8 +257,8 @@ class RouteHandler:
             handler, request, request_data, hints
         )
 
-        # 핸들러 실행
-        return handler(**kwargs)
+        # 핸들러 실행 (sync/async 자동 처리)
+        return await run_sync_or_async(handler)(**kwargs)
 
     def _collect_request_data(self, request: HttpRequest) -> Dict[str, Any]:
         """요청 데이터 수집 (query, path, body)"""

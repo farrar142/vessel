@@ -15,7 +15,13 @@ Spring IOC 스타일의 Python 의존성 주입 프레임워크입니다.
 - `@RequestMapping`: URL 매핑
 - `@Get`, `@Post`, `@Put`, `@Delete`: HTTP 메서드 핸들러
 
-### 3. 핸들러 인터셉터 (NEW!)
+### 3. Async/Sync 지원 (NEW! 🚀)
+- **완벽한 하위 호환성**: 기존 동기 코드 수정 불필요
+- **투명한 통합**: sync/async 핸들러를 자유롭게 혼용
+- **점진적 마이그레이션**: 필요한 부분만 async로 전환
+- `asgiref` 기반의 안정적인 구현
+
+### 4. 핸들러 인터셉터
 - 핸들러 실행 전/후 처리
 - 에러 핸들링
 - 중첩 가능한 인터셉터
@@ -40,6 +46,47 @@ class MyController:
     def handle(self, request):
         return self.service.process(request.data)
 ```
+
+## Async/Sync 지원 예제
+
+### 기존 동기 코드 그대로 작동
+
+```python
+# 기존 방식 - 아무 변경 없이 계속 사용 가능
+response = app.handle_request(request)
+```
+
+### Async 핸들러 사용
+
+```python
+@Controller
+@RequestMapping("/api")
+class AsyncController:
+    service: MyService
+    
+    @Get()
+    async def fetch_data(self, request):
+        # async 핸들러 - 외부 API 호출 등에 유용
+        data = await external_api_call()
+        return {"data": data}
+```
+
+### Async 컨텍스트에서 호출
+
+```python
+# Async 환경에서는 await로 호출
+async def main():
+    response = await app.handle_request(request)
+    
+# 여러 요청 동시 처리
+responses = await asyncio.gather(
+    app.handle_request(request1),
+    app.handle_request(request2),
+    app.handle_request(request3)
+)
+```
+
+더 자세한 내용은 [Async Support 가이드](docs/08_async_support.md)와 [Async 호환성 가이드](docs/09_async_compatibility.md)를 참조하세요.
 
 ## 인터셉터 사용 예제
 

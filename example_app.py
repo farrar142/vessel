@@ -89,18 +89,9 @@ def main():
     # 초기화
     app.initialize()
 
-    # 미들웨어 추가 (선택사항)
-    def logging_middleware(request, next_handler):
-        print(f"[MIDDLEWARE] {request.method} {request.path}")
-        response = next_handler(request)
-        print(f"[MIDDLEWARE] Response: {response.status_code}")
-        return response
-
-    app.add_middleware(logging_middleware)
-
     # 에러 핸들러 추가 (선택사항)
     def handle_value_error(error):
-        from vessel.http.request import HttpResponse
+        from vessel.web.http.request import HttpResponse
 
         return HttpResponse(
             status_code=400, body={"error": "Bad Request", "message": str(error)}
@@ -110,7 +101,7 @@ def main():
 
     # 수동 요청 테스트
     print("\n=== Manual Request Test ===")
-    from vessel.http.request import HttpRequest
+    from vessel.web.http.request import HttpRequest
 
     # GET /api/health
     request1 = HttpRequest(method="GET", path="/api/health")

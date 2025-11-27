@@ -23,5 +23,6 @@ setup(
     python_requires=">=3.8",
     install_requires=[
         "typing-extensions>=4.0.0",
+        "asgiref>=3.7.0",
     ],
 )

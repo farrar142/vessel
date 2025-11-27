@@ -14,6 +14,7 @@ from vessel.web.router.parameter_injection import (
     HttpHeaderInjector,
     HttpCookieInjector,
     FileInjector,
+    RequestBodyInjector,
     DefaultValueInjector,
     ValidationError,
     AuthenticationInjector,
@@ -52,13 +53,23 @@ class RouteHandler:
 
     def _setup_injector_registry(self):
         """파라미터 주입 레지스트리 설정"""
+        from vessel.web.router.parameter_injection.dataclass_injector import (
+            DataclassInjector,
+        )
+        from vessel.web.router.parameter_injection.pydantic_injector import (
+            PydanticInjector,
+        )
+
         self.injector_registry = ParameterInjectorRegistry()
-        self.injector_registry.register(HttpRequestInjector())
-        self.injector_registry.register(AuthenticationInjector())
-        self.injector_registry.register(HttpHeaderInjector())
-        self.injector_registry.register(HttpCookieInjector())
-        self.injector_registry.register(FileInjector())
-        self.injector_registry.register(DefaultValueInjector())  # 가장 낮은 우선순위
+        self.injector_registry.register(HttpRequestInjector())  # Priority: 0
+        self.injector_registry.register(HttpHeaderInjector())  # Priority: 100
+        self.injector_registry.register(HttpCookieInjector())  # Priority: 110
+        self.injector_registry.register(RequestBodyInjector())  # Priority: 150
+        self.injector_registry.register(AuthenticationInjector())  # Priority: 180
+        self.injector_registry.register(FileInjector())  # Priority: 200
+        self.injector_registry.register(DataclassInjector())  # Priority: 300 (new)
+        self.injector_registry.register(PydanticInjector())  # Priority: 310 (new)
+        self.injector_registry.register(DefaultValueInjector())  # Priority: 999
 
     def _register_routes(self):
         """컨트롤러들에서 라우트 정보 수집"""

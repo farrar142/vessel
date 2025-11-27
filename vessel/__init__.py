@@ -24,6 +24,7 @@ from vessel.decorators.web.mapping import (
 )
 from vessel.di.core.container_manager import ContainerManager
 from vessel.web.http.request import HttpRequest, HttpResponse
+from vessel.web.http.request_body import RequestBody
 from vessel.web.application import Application
 from vessel.web.middleware.chain import Middleware, MiddlewareChain, MiddlewareGroup
 from vessel.web.middleware.builtins import (
@@ -53,6 +54,7 @@ __all__ = [
     "ContainerManager",
     "HttpRequest",
     "HttpResponse",
+    "RequestBody",
     "create_handler_decorator",
     "Application",
     "Middleware",

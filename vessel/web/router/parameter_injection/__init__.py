@@ -15,6 +15,9 @@ from vessel.web.router.parameter_injection.default_value_injector import (
     DefaultValueInjector,
     ValidationError,
 )
+from vessel.web.router.parameter_injection.request_body_injector import (
+    RequestBodyInjector,
+)
 from vessel.web.auth import AuthenticationInjector
 
 __all__ = [
@@ -25,6 +28,7 @@ __all__ = [
     "HttpHeaderInjector",
     "HttpCookieInjector",
     "FileInjector",
+    "RequestBodyInjector",
     "DefaultValueInjector",
     "ValidationError",
     "AuthenticationInjector",

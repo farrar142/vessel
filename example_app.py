@@ -82,7 +82,6 @@ def main():
     app = Application(
         "__main__",  # 현재 모듈 스캔
         debug=True,
-        enable_cors=True,
         host="127.0.0.1",
         port=8080,
     )

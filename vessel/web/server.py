@@ -34,7 +34,6 @@ class DevServer:
         logger.info(f"   Host: {self.host}")
         logger.info(f"   Port: {self.port}")
         logger.info(f"   Debug: {self.app.debug}")
-        logger.info(f"   CORS: {'Enabled' if self.app.enable_cors else 'Disabled'}")
         logger.info("=" * 60)
         logger.info("Starting development server...")
         logger.info("(Use an ASGI/WSGI server like Uvicorn for production)")

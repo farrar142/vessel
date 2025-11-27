@@ -29,12 +29,10 @@ class RequestHandler:
         self,
         route_handler: "RouteHandler",
         middleware_chain: Optional["MiddlewareChain"] = None,
-        enable_cors: bool = False,
         debug: bool = False,
     ):
         self.route_handler = route_handler
         self.middleware_chain = middleware_chain
-        self.enable_cors = enable_cors
         self.debug = debug
         self.error_handlers: Dict[type, Callable] = {}
 
@@ -77,29 +75,10 @@ class RequestHandler:
             else:
                 response = self.route_handler.handle_request(request)
 
-            # CORS 헤더 추가
-            if self.enable_cors:
-                response = self._add_cors_headers(response)
-
             return response
 
         except Exception as e:
             return self._handle_error(e, request)
-
-    def _add_cors_headers(self, response: HttpResponse) -> HttpResponse:
-        """CORS 헤더 추가"""
-        if not hasattr(response, "headers"):
-            response.headers = {}
-
-        response.headers.update(
-            {
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
-                "Access-Control-Allow-Headers": "Content-Type, Authorization",
-            }
-        )
-
-        return response
 
     def _handle_error(self, error: Exception, request: HttpRequest) -> HttpResponse:
         """에러 처리"""

@@ -78,25 +78,6 @@ class TestApplication:
         assert response.status_code == 200
         assert response.body == {"message": "Hello"}
 
-    def test_cors_headers(self):
-        """CORS 헤더 테스트"""
-
-        @Controller("/api")
-        class ApiController:
-            @Get
-            def test(self):
-                return {"result": "ok"}
-
-        app = Application("__main__", enable_cors=True)
-        app.initialize()
-
-        request = HttpRequest(method="GET", path="/api")
-        response = app.handle_request(request)
-
-        assert response.status_code == 200
-        assert "Access-Control-Allow-Origin" in response.headers
-        assert response.headers["Access-Control-Allow-Origin"] == "*"
-
     def test_error_handler(self):
         """에러 핸들러 테스트"""
 

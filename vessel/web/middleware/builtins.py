@@ -3,9 +3,11 @@ Built-in Middleware 구현
 Middleware들은 @Component가 아닌 @Factory로 생성되어야 함
 """
 
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Literal
 from vessel.web.middleware.chain import Middleware
 from vessel.web.http.request import HttpRequest, HttpResponse
+
+HttpMethod = Literal["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
 
 
 class CorsMiddleware(Middleware):
@@ -17,7 +19,7 @@ class CorsMiddleware(Middleware):
 
     def __init__(self):
         self.allowed_origins: List[str] = ["*"]
-        self.allowed_methods: List[str] = [
+        self.allowed_methods: List[HttpMethod] = [
             "GET",
             "POST",
             "PUT",
@@ -42,7 +44,7 @@ class CorsMiddleware(Middleware):
         self.allowed_origins = list(origins)
         return self
 
-    def set_allowed_methods(self, *methods: str) -> "CorsMiddleware":
+    def set_allowed_methods(self, *methods: HttpMethod) -> "CorsMiddleware":
         """
         허용할 HTTP 메서드 설정
 
@@ -52,7 +54,7 @@ class CorsMiddleware(Middleware):
         Returns:
             self (메서드 체이닝용)
         """
-        self.allowed_methods = [m.upper() for m in methods]
+        self.allowed_methods = list(methods)
         return self
 
     def set_allowed_headers(self, *headers: str) -> "CorsMiddleware":

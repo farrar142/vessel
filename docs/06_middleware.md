@@ -13,67 +13,97 @@ Vessel의 미들웨어 시스템은 요청 처리 전후에 공통 로직을 실
 
 ```python
 from vessel import Middleware, HttpRequest, HttpResponse
-from typing import Callable
+from typing import Optional, Any
 
 class MyMiddleware(Middleware):
-    def process(
-        self,
-        request: HttpRequest,
-        next: Callable[[HttpRequest], HttpResponse]
+    def process_request(self, request: HttpRequest) -> Optional[Any]:
+        """
+        요청 처리 전 실행
+        
+        Args:
+            request: HTTP 요청
+            
+        Returns:
+            None: 다음 미들웨어/핸들러로 진행
+            Any: 반환값이 있으면 early return (라우트 핸들러 스킵)
+        """
+        # 요청 전처리
+        print(f"Request: {request.method} {request.path}")
+        return None  # 다음으로 진행
+    
+    def process_response(
+        self, 
+        request: HttpRequest, 
+        response: HttpResponse
     ) -> HttpResponse:
         """
-        request: 현재 요청
-        next: 다음 미들웨어 또는 핸들러를 실행하는 함수
+        응답 처리 후 실행
+        
+        Args:
+            request: HTTP 요청
+            response: HTTP 응답
+            
+        Returns:
+            HttpResponse: 수정된 응답 (또는 원본 응답)
         """
-        # 1. 요청 전처리
-        print(f"Request: {request.method} {request.path}")
-        
-        # 2. 다음 단계 실행
-        response = next(request)
-        
-        # 3. 응답 후처리
+        # 응답 후처리
         print(f"Response: {response.status_code}")
-        
         return response
 ```
 
 ## 미들웨어 등록
 
-### 자동 등록 (@Component)
+### 수동 등록 (@Factory 사용)
 
-`@Component`로 등록된 미들웨어는 자동으로 감지되고 등록됩니다:
+미들웨어는 `@Factory`를 통해 `MiddlewareChain`에 수동으로 등록합니다:
 
 ```python
-from vessel import Component, Middleware, HttpRequest, HttpResponse
-from typing import Callable
+from vessel import Component, Configuration, Factory, Middleware, MiddlewareChain
+from vessel import HttpRequest, HttpResponse
 
 @Component
 class LoggingMiddleware(Middleware):
-    def process(
-        self,
-        request: HttpRequest,
-        next: Callable[[HttpRequest], HttpResponse]
-    ) -> HttpResponse:
+    def process_request(self, request: HttpRequest):
         print(f"[LOG] {request.method} {request.path}")
-        response = next(request)
+        return None
+    
+    def process_response(self, request: HttpRequest, response: HttpResponse):
         print(f"[LOG] Response {response.status_code}")
         return response
+
+@Configuration
+class MiddlewareConfig:
+    @Factory
+    def middleware_chain(self, logging: LoggingMiddleware) -> MiddlewareChain:
+        chain = MiddlewareChain()
+        chain.get_default_group().add(logging)
+        return chain
 ```
 
-### 수동 등록 (MiddlewareChain)
+### 여러 미들웨어 등록
 
-더 세밀한 제어가 필요하면 `MiddlewareChain`을 직접 구성:
+`MiddlewareChain`에 여러 미들웨어를 순서대로 추가:
 
 ```python
 from vessel import Configuration, Factory, MiddlewareChain, Component
 
 @Component
 class LoggingMiddleware(Middleware):
-    # ...
+    def process_request(self, request: HttpRequest):
+        print(f"[LOG] {request.method} {request.path}")
+        return None
+    
+    def process_response(self, request: HttpRequest, response: HttpResponse):
+        return response
 
 @Component
 class AuthMiddleware(Middleware):
-    # ...
+    def process_request(self, request: HttpRequest):
+        # 인증 로직
+        return None
+    
+    def process_response(self, request: HttpRequest, response: HttpResponse):
+        return response
 
 @Configuration
 class MiddlewareConfig:
@@ -98,7 +128,6 @@ class MiddlewareConfig:
 
 ```python
 from vessel import Component, Middleware, HttpRequest, HttpResponse
-from typing import Callable
 
 @Component
 class UserService:
@@ -109,90 +138,91 @@ class UserService:
 class UserTrackingMiddleware(Middleware):
     service: UserService  # 👈 필드 주입
     
-    def process(
-        self,
-        request: HttpRequest,
-        next: Callable[[HttpRequest], HttpResponse]
-    ) -> HttpResponse:
+    def process_request(self, request: HttpRequest):
         user_id = request.headers.get("X-User-ID", "anonymous")
         self.service.log_request(user_id, request.path)
-        
-        return next(request)
+        return None
+    
+    def process_response(self, request: HttpRequest, response: HttpResponse):
+        return response
 ```
 
 ## 조기 반환 (Early Return)
 
-미들웨어에서 `next()`를 호출하지 않고 직접 응답을 반환하면, 이후 미들웨어와 핸들러는 실행되지 않습니다:
+`process_request()`에서 `None`이 아닌 값을 반환하면, 이후 미들웨어와 핸들러는 실행되지 않습니다:
 
 ```python
-from vessel import Component, Middleware, HttpRequest, HttpResponse, HttpStatus
-from typing import Callable
+from vessel import Component, Middleware, HttpRequest, HttpResponse
 
 @Component
 class RateLimitMiddleware(Middleware):
     def __init__(self):
         self.request_count = {}
     
-    def process(
-        self,
-        request: HttpRequest,
-        next: Callable[[HttpRequest], HttpResponse]
-    ) -> HttpResponse:
+    def process_request(self, request: HttpRequest):
         ip = request.headers.get("X-Forwarded-For", "unknown")
         
         # IP별 요청 횟수 확인
         count = self.request_count.get(ip, 0)
         
         if count >= 100:  # 제한 초과
-            # 조기 반환: next()를 호출하지 않음
+            # 조기 반환: HttpResponse를 반환하면 핸들러 실행 안 됨
             return HttpResponse(
-                status_code=HttpStatus.TOO_MANY_REQUESTS,
+                status_code=429,
                 body={"error": "Rate limit exceeded"}
             )
         
         # 제한 내: 계속 진행
         self.request_count[ip] = count + 1
-        return next(request)
+        return None  # None을 반환하면 다음으로 진행
+    
+    def process_response(self, request: HttpRequest, response: HttpResponse):
+        return response
 ```
 
 ## 실행 순서
 
-미들웨어는 등록된 순서대로 실행됩니다:
+미들웨어는 등록된 순서대로 `process_request()`를 실행하고, 역순으로 `process_response()`를 실행합니다:
 
 ```python
 @Component
 class FirstMiddleware(Middleware):
-    def process(self, request, next):
-        print("1. Before")
-        response = next(request)
-        print("6. After")
+    def process_request(self, request):
+        print("1. First - Request")
+        return None
+    
+    def process_response(self, request, response):
+        print("6. First - Response")
         return response
 
 @Component
 class SecondMiddleware(Middleware):
-    def process(self, request, next):
-        print("2. Before")
-        response = next(request)
-        print("5. After")
+    def process_request(self, request):
+        print("2. Second - Request")
+        return None
+    
+    def process_response(self, request, response):
+        print("5. Second - Response")
         return response
 
 @Component
 class ThirdMiddleware(Middleware):
-    def process(self, request, next):
-        print("3. Before")
-        response = next(request)
-        print("4. After")
+    def process_request(self, request):
+        print("3. Third - Request")
+        return None
+    
+    def process_response(self, request, response):
+        print("4. Third - Response")
         return response
 
-# 핸들러는 마지막에 실행됨
-# 출력:
-# 1. Before
-# 2. Before
-# 3. Before
+# 실행 순서:
+# 1. First - Request (등록 순서대로)
+# 2. Second - Request
+# 3. Third - Request
 # [Handler 실행]
-# 4. After
-# 5. After
-# 6. After
+# 4. Third - Response (역순으로)
+# 5. Second - Response
+# 6. First - Response
 ```
 
 ## 실전 예제
@@ -201,16 +231,11 @@ class ThirdMiddleware(Middleware):
 
 ```python
 from vessel import Component, Middleware, HttpRequest, HttpResponse
-from typing import Callable
 
 @Component
 class CORSMiddleware(Middleware):
-    def process(
-        self,
-        request: HttpRequest,
-        next: Callable[[HttpRequest], HttpResponse]
-    ) -> HttpResponse:
-        # OPTIONS 요청 (preflight)은 즉시 응답
+    def process_request(self, request: HttpRequest):
+        # OPTIONS 요청 (preflight)은 즉시 응답 (early return)
         if request.method == "OPTIONS":
             return HttpResponse(
                 status_code=200,
@@ -221,12 +246,12 @@ class CORSMiddleware(Middleware):
                     "Access-Control-Max-Age": "3600"
                 }
             )
-        
+        return None  # 일반 요청은 계속 진행
+    
+    def process_response(self, request: HttpRequest, response: HttpResponse):
         # 일반 요청은 처리 후 CORS 헤더 추가
-        response = next(request)
         response.headers["Access-Control-Allow-Origin"] = "*"
         response.headers["Access-Control-Allow-Credentials"] = "true"
-        
         return response
 ```
 
@@ -235,15 +260,10 @@ class CORSMiddleware(Middleware):
 ```python
 import uuid
 from vessel import Component, Middleware, HttpRequest, HttpResponse
-from typing import Callable
 
 @Component
 class RequestIDMiddleware(Middleware):
-    def process(
-        self,
-        request: HttpRequest,
-        next: Callable[[HttpRequest], HttpResponse]
-    ) -> HttpResponse:
+    def process_request(self, request: HttpRequest):
         # 요청에 고유 ID 생성
         request_id = str(uuid.uuid4())
         
@@ -254,13 +274,12 @@ class RequestIDMiddleware(Middleware):
         
         # 헤더에도 추가
         request.headers['X-Request-ID'] = request_id
-        
-        # 처리
-        response = next(request)
-        
+        return None
+    
+    def process_response(self, request: HttpRequest, response: HttpResponse):
         # 응답에도 Request ID 추가
-        response.headers['X-Request-ID'] = request_id
-        
+        if hasattr(request, 'context') and 'request_id' in request.context:
+            response.headers['X-Request-ID'] = request.context['request_id']
         return response
 ```
 
@@ -269,85 +288,79 @@ class RequestIDMiddleware(Middleware):
 ```python
 import time
 from vessel import Component, Middleware, HttpRequest, HttpResponse
-from typing import Callable
 
 @Component
 class TimingMiddleware(Middleware):
-    def process(
-        self,
-        request: HttpRequest,
-        next: Callable[[HttpRequest], HttpResponse]
-    ) -> HttpResponse:
-        start_time = time.time()
-        
-        response = next(request)
-        
-        duration = time.time() - start_time
-        response.headers['X-Response-Time'] = f"{duration:.3f}s"
-        
-        print(f"[TIMING] {request.method} {request.path} - {duration:.3f}s")
-        
+    def process_request(self, request: HttpRequest):
+        # 시작 시간을 context에 저장
+        if not hasattr(request, 'context'):
+            request.context = {}
+        request.context['start_time'] = time.time()
+        return None
+    
+    def process_response(self, request: HttpRequest, response: HttpResponse):
+        # 종료 시간 계산
+        if hasattr(request, 'context') and 'start_time' in request.context:
+            duration = time.time() - request.context['start_time']
+            response.headers['X-Response-Time'] = f"{duration:.3f}s"
+            print(f"[TIMING] {request.method} {request.path} - {duration:.3f}s")
         return response
 ```
 
 ### IP Whitelist Middleware
 
 ```python
-from vessel import Component, Middleware, HttpRequest, HttpResponse, HttpStatus
-from typing import Callable
+from vessel import Component, Middleware, HttpRequest, HttpResponse
 
 @Component
 class IPWhitelistMiddleware(Middleware):
     def __init__(self):
         self.allowed_ips = ["127.0.0.1", "192.168.1.100"]
     
-    def process(
-        self,
-        request: HttpRequest,
-        next: Callable[[HttpRequest], HttpResponse]
-    ) -> HttpResponse:
+    def process_request(self, request: HttpRequest):
         client_ip = request.headers.get("X-Forwarded-For", "unknown")
         
         if client_ip not in self.allowed_ips:
+            # Early return - 허용되지 않은 IP
             return HttpResponse(
-                status_code=HttpStatus.FORBIDDEN,
+                status_code=403,
                 body={"error": "Access denied"}
             )
-        
-        return next(request)
+        return None  # 허용된 IP는 계속 진행
+    
+    def process_response(self, request: HttpRequest, response: HttpResponse):
+        return response
 ```
 
 ### Request Validation Middleware
 
 ```python
-from vessel import Component, Middleware, HttpRequest, HttpResponse, HttpStatus
-from typing import Callable
+from vessel import Component, Middleware, HttpRequest, HttpResponse
 
 @Component
 class RequestValidationMiddleware(Middleware):
-    def process(
-        self,
-        request: HttpRequest,
-        next: Callable[[HttpRequest], HttpResponse]
-    ) -> HttpResponse:
+    def process_request(self, request: HttpRequest):
         # Content-Type 검증
         if request.method in ["POST", "PUT", "PATCH"]:
             content_type = request.headers.get("Content-Type", "")
             
             if not content_type.startswith("application/json"):
                 return HttpResponse(
-                    status_code=HttpStatus.UNSUPPORTED_MEDIA_TYPE,
+                    status_code=415,
                     body={"error": "Content-Type must be application/json"}
                 )
         
         # User-Agent 검증
         if not request.headers.get("User-Agent"):
             return HttpResponse(
-                status_code=HttpStatus.BAD_REQUEST,
+                status_code=400,
                 body={"error": "User-Agent header is required"}
             )
         
-        return next(request)
+        return None  # 검증 통과
+    
+    def process_response(self, request: HttpRequest, response: HttpResponse):
+        return response
 ```
 
 ## 내장 미들웨어
@@ -370,48 +383,58 @@ class MyAuthMiddleware(AuthMiddleware):
 
 ```python
 from vessel import (
-    Application, Controller, Get, Post,
+    Application, Controller, Get,
     Component, Middleware, HttpRequest, HttpResponse,
     Configuration, Factory, MiddlewareChain
 )
-from typing import Callable
 import time
 import uuid
 
 # 1. Logging Middleware
 @Component
 class LoggingMiddleware(Middleware):
-    def process(self, request, next):
+    def process_request(self, request: HttpRequest):
         print(f"→ {request.method} {request.path}")
-        response = next(request)
+        return None
+    
+    def process_response(self, request: HttpRequest, response: HttpResponse):
         print(f"← {response.status_code}")
         return response
 
 # 2. Request ID Middleware
 @Component
 class RequestIDMiddleware(Middleware):
-    def process(self, request, next):
+    def process_request(self, request: HttpRequest):
         request_id = str(uuid.uuid4())
-        request.headers['X-Request-ID'] = request_id
-        
-        response = next(request)
-        response.headers['X-Request-ID'] = request_id
+        if not hasattr(request, 'context'):
+            request.context = {}
+        request.context['request_id'] = request_id
+        return None
+    
+    def process_response(self, request: HttpRequest, response: HttpResponse):
+        if hasattr(request, 'context') and 'request_id' in request.context:
+            response.headers['X-Request-ID'] = request.context['request_id']
         return response
 
 # 3. Timing Middleware
 @Component
 class TimingMiddleware(Middleware):
-    def process(self, request, next):
-        start = time.time()
-        response = next(request)
-        duration = time.time() - start
-        response.headers['X-Response-Time'] = f"{duration:.3f}s"
+    def process_request(self, request: HttpRequest):
+        if not hasattr(request, 'context'):
+            request.context = {}
+        request.context['start_time'] = time.time()
+        return None
+    
+    def process_response(self, request: HttpRequest, response: HttpResponse):
+        if hasattr(request, 'context') and 'start_time' in request.context:
+            duration = time.time() - request.context['start_time']
+            response.headers['X-Response-Time'] = f"{duration:.3f}s"
         return response
 
 # 4. CORS Middleware
 @Component
 class CORSMiddleware(Middleware):
-    def process(self, request, next):
+    def process_request(self, request: HttpRequest):
         if request.method == "OPTIONS":
             return HttpResponse(
                 status_code=200,
@@ -421,8 +444,9 @@ class CORSMiddleware(Middleware):
                     "Access-Control-Allow-Headers": "Content-Type"
                 }
             )
-        
-        response = next(request)
+        return None
+    
+    def process_response(self, request: HttpRequest, response: HttpResponse):
         response.headers['Access-Control-Allow-Origin'] = "*"
         return response
 
@@ -465,30 +489,32 @@ if __name__ == "__main__":
 
 **실행 흐름:**
 ```
-→ GET /api/hello          (LoggingMiddleware)
-[Request ID 생성]          (RequestIDMiddleware)
-[Timer 시작]               (TimingMiddleware)
-[CORS 헤더 추가]           (CORSMiddleware)
+→ GET /api/hello                    (LoggingMiddleware - request)
+[Request ID 생성]                    (RequestIDMiddleware - request)
+[Timer 시작]                         (TimingMiddleware - request)
+[CORS preflight 체크]               (CORSMiddleware - request)
 [Handler 실행]
-[Timer 종료]               (TimingMiddleware)
-← 200                      (LoggingMiddleware)
+[CORS 헤더 추가]                    (CORSMiddleware - response)
+[Timer 종료]                         (TimingMiddleware - response)
+[Request ID 응답 추가]               (RequestIDMiddleware - response)
+← 200                                (LoggingMiddleware - response)
 ```
 
 ## 정리
 
 ### ✅ 지원하는 기능
-- 요청 전처리/후처리
+- 요청 전처리 (`process_request`)
+- 응답 후처리 (`process_response`)
 - 조기 반환 (Early Return)
-- 의존성 주입
-- 자동 감지 (@Component)
-- 수동 순서 제어 (MiddlewareChain)
-- 체인 실행
+- 의존성 주입 (필드 주입)
+- 미들웨어 그룹 (`MiddlewareGroup`)
+- 수동 순서 제어 (`MiddlewareChain`)
+- 개별 미들웨어 활성화/비활성화
 
 ### ❌ 지원하지 않는 기능
+- 자동 감지 (반드시 `@Factory`로 `MiddlewareChain` 구성 필요)
 - 경로별 미들웨어 (모든 경로에 적용)
-- 조건부 미들웨어 (직접 구현 필요)
 - 비동기 미들웨어 (동기만 지원)
-- 미들웨어 그룹핑 (단일 체인만 지원)
 
 ### 권장 사항
 

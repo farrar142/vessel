@@ -26,22 +26,27 @@
 ### 새로운 모듈 구조
 
 ```
-pydi/core/
-├── container_manager.py         # 📊 Orchestrator (102줄)
-├── package_scanner.py            # 📦 패키지 스캐닝 (57줄)
-├── container_collector.py        # 🗂️ 컨테이너 수집 (90줄)
-├── dependency_analyzer.py        # 🔍 의존성 분석 (122줄)
-├── component_initializer.py      # 🏭 컴포넌트 초기화 (151줄)
-└── interceptor_resolver.py       # 🔗 인터셉터 해결 (97줄)
+vessel/di/
+├── core/
+│   ├── container_manager.py         # 📊 Orchestrator (102줄)
+│   ├── container.py                 # Container 베이스 클래스
+│   └── dependency.py                # DependencyGraph (Topological Sort)
+│
+└── utils/                           # 단일 책임 원칙 (SRP) 준수
+    ├── package_scanner.py           # 📦 패키지 스캐닝 (57줄)
+    ├── container_collector.py       # 🗂️ 컨테이너 수집 (90줄)
+    ├── dependency_analyzer.py       # 🔍 의존성 분석 (122줄)
+    ├── component_initializer.py     # 🏭 컴포넌트 초기화 (151줄)
+    └── interceptor_resolver.py      # 🔗 인터셉터 해결 (97줄)
 ```
 
 ## 📦 각 모듈의 책임
 
-### 1. PackageScanner
+### 1. PackageScanner (`vessel/di/utils/package_scanner.py`)
 **책임**: 패키지 스캐닝 및 모듈 import
 
 ```python
-from vessel.core.package_scanner import PackageScanner
+from vessel.di.utils.package_scanner import PackageScanner
 
 PackageScanner.scan_packages("my_package", "another_package")
 ```
@@ -50,11 +55,15 @@ PackageScanner.scan_packages("my_package", "another_package")
 - `scan_packages(*packages)`: 여러 패키지 스캔
 - `_scan_package(package_name)`: 단일 패키지 스캔 (재귀적)
 
-### 2. ContainerCollector
+**파일 크기**: 57줄
+
+---
+
+### 2. ContainerCollector (`vessel/di/utils/container_collector.py`)
 **책임**: 전역 레지스트리에서 컨테이너 수집
 
 ```python
-from vessel.core.container_collector import ContainerCollector
+from vessel.di.utils.container_collector import ContainerCollector
 
 components, controllers, factories = ContainerCollector.collect_containers()
 ```
@@ -63,11 +72,15 @@ components, controllers, factories = ContainerCollector.collect_containers()
 - `collect_containers()`: 모든 컨테이너 수집 및 반환
 - `_collect_factory_methods()`: @Factory 메서드 수집
 
-### 3. DependencyAnalyzer
-**책임**: 컴포넌트 간 의존성 분석
+**파일 크기**: 90줄
+
+---
+
+### 3. DependencyAnalyzer (`vessel/di/utils/dependency_analyzer.py`)
+**책임**: 컴포넌트 간 의존성 분석 - DependencyGraph 구축
 
 ```python
-from vessel.core.dependency_analyzer import DependencyAnalyzer
+from vessel.di.utils.dependency_analyzer import DependencyAnalyzer
 
 DependencyAnalyzer.analyze_dependencies(
     components, controllers, factories, dependency_graph
@@ -81,11 +94,15 @@ DependencyAnalyzer.analyze_dependencies(
 - `_analyze_controller_dependencies()`: 컨트롤러 의존성 분석
 - `_analyze_factory_dependencies()`: 팩토리 의존성 분석
 
-### 4. ComponentInitializer
+**파일 크기**: 122줄
+
+---
+
+### 4. ComponentInitializer (`vessel/di/utils/component_initializer.py`)
 **책임**: Topological Sort된 순서대로 컴포넌트 초기화
 
 ```python
-from vessel.core.component_initializer import ComponentInitializer
+from vessel.di.utils.component_initializer import ComponentInitializer
 
 ComponentInitializer.initialize_components(
     sorted_types, components, controllers, factories, instances
@@ -100,11 +117,15 @@ ComponentInitializer.initialize_components(
 - `_initialize_factory_type()`: 팩토리를 통한 타입 생성
 - `_initialize_remaining_components()`: 의존성 없는 컴포넌트 초기화
 
-### 5. InterceptorResolver
+**파일 크기**: 151줄
+
+---
+
+### 5. InterceptorResolver (`vessel/di/utils/interceptor_resolver.py`)
 **책임**: 인터셉터의 의존성 수집 및 해결
 
 ```python
-from vessel.core.interceptor_resolver import InterceptorResolver
+from vessel.di.utils.interceptor_resolver import InterceptorResolver
 
 InterceptorResolver.collect_and_initialize_interceptor_dependencies(
     components, instances
@@ -118,11 +139,17 @@ InterceptorResolver.resolve_handler_interceptors(container_manager)
 - `_initialize_interceptor_dependencies()`: 인터셉터 의존성 초기화
 - `resolve_handler_interceptors()`: 핸들러 인터셉터 해결
 
-### 6. ContainerManager (리팩토링 후)
+**파일 크기**: 97줄
+
+**중요**: 인터셉터는 메인 컴포넌트 초기화 **이후**에 해결됩니다.
+
+---
+
+### 6. ContainerManager (리팩토링 후) (`vessel/di/core/container_manager.py`)
 **책임**: Orchestrator - 전체 프로세스 조율 및 외부 API 제공
 
 ```python
-from vessel import ContainerManager
+from vessel.di.core.container_manager import ContainerManager
 
 manager = ContainerManager()
 manager.component_scan("my_package")
@@ -138,6 +165,8 @@ instance = manager.get_instance(MyService)
 - `get_all_instances()`: 모든 인스턴스 조회
 - `get_controllers()`: 컨트롤러 인스턴스 조회
 - `get_container(type_)`: 컨테이너 조회
+
+**파일 크기**: 102줄 (리팩토링 전 327줄에서 **69% 감소**)
 
 ## 🔄 초기화 프로세스 흐름
 
@@ -169,21 +198,29 @@ ContainerManager.initialize()
 ## 🎯 개선 효과
 
 ### 코드 품질
-- ✅ **Single Responsibility**: 각 클래스가 하나의 책임만 가짐
+- ✅ **Single Responsibility Principle (SRP)**: 각 클래스가 하나의 책임만 가짐
 - ✅ **가독성 향상**: 작은 파일들로 분리되어 이해하기 쉬움
 - ✅ **테스트 용이**: 각 모듈을 독립적으로 테스트 가능
 - ✅ **유지보수성**: 수정 시 영향 범위가 명확함
+- ✅ **Orchestrator 패턴**: ContainerManager는 조율만 담당
 
-### 파일 크기
-| 파일 | 리팩토링 전 | 리팩토링 후 |
-|------|------------|------------|
-| container_manager.py | 327줄 | 102줄 (-69%) |
-| 전체 (새 모듈 포함) | 327줄 | 619줄 |
+### 파일 크기 비교
+| 파일 | 리팩토링 전 | 리팩토링 후 | 감소율 |
+|------|------------|------------|--------|
+| container_manager.py | 327줄 | 102줄 | **-69%** |
+| package_scanner.py | - | 57줄 | 신규 |
+| container_collector.py | - | 90줄 | 신규 |
+| dependency_analyzer.py | - | 122줄 | 신규 |
+| component_initializer.py | - | 151줄 | 신규 |
+| interceptor_resolver.py | - | 97줄 | 신규 |
+| **전체 (di/utils 포함)** | 327줄 | **619줄** | +89% (모듈화) |
 
 ### 모듈성
 - **높은 응집도**: 관련 기능이 함께 위치
 - **낮은 결합도**: 모듈 간 의존성 최소화
 - **재사용성**: 각 모듈을 독립적으로 사용 가능
+- **테스트 가능**: 각 유틸리티를 독립적으로 테스트
+- **확장 용이**: 새로운 기능 추가 시 적절한 모듈에 배치
 
 ## 🔧 기술적 세부사항
 

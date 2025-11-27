@@ -40,7 +40,6 @@ class Application:
     def __init__(
         self,
         *packages: str,
-        enable_cors: bool = False,
         debug: bool = False,
         host: str = "0.0.0.0",
         port: int = 8080,
@@ -50,14 +49,12 @@ class Application:
 
         Args:
             *packages: 컴포넌트 스캔할 패키지 목록
-            enable_cors: CORS 활성화 여부
             debug: 디버그 모드 (상세 로그 출력)
             host: 서버 호스트
             port: 서버 포트
         """
         # 설정
         self.packages = list(packages) if packages else []
-        self.enable_cors = enable_cors
         self.debug = debug
         self.host = host
         self.port = port
@@ -113,7 +110,6 @@ class Application:
         self._request_handler = RequestHandler(
             route_handler=self.route_handler,
             middleware_chain=self.middleware_chain,
-            enable_cors=self.enable_cors,
             debug=self.debug,
         )
 

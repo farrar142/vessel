@@ -13,6 +13,9 @@ from io import BytesIO
 class UploadedFile:
     """
     업로드된 파일을 나타내는 클래스
+
+    DO NOT instantiate this class directly. It is created by the framework during injection.
+    Use type hints (UploadedFile or UploadedFile["key"]) in function parameters instead.
     """
 
     def __init__(
@@ -21,6 +24,10 @@ class UploadedFile:
         content: bytes,
         content_type: str = "application/octet-stream",
     ):
+        """
+        WARNING: This is for internal use only. Do not instantiate directly.
+        Use type hints in function parameters for automatic file injection.
+        """
         self.filename = filename
         self._content = content
         self.content_type = content_type

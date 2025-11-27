@@ -1,18 +1,23 @@
 # RequestBody - Dataclass & Pydantic 자동 변환
 
-> 테스트 기반: 
-> - Dataclass: `tests/test_parameter_validation.py::TestValidationWithRequestBody`
-> - Pydantic: `tests/test_pydantic_request_body.py::TestPydanticRequestBody`
+> 테스트 기반: `tests/test_parameter_injector_integration.py`
 
 ## 개요
 
-`RequestBody[T]` 타입 힌트를 사용하면 HTTP 요청 body 전체를 자동으로 dataclass 또는 Pydantic BaseModel 인스턴스로 변환할 수 있습니다.
+HTTP 요청 body를 자동으로 dataclass 또는 Pydantic BaseModel 인스턴스로 변환할 수 있습니다.
+
+**세 가지 사용 패턴:**
+1. `RequestBody[T]` - 전체 body를 하나의 모델로 변환 (명시적)
+2. 직접 dataclass/BaseModel 파라미터 - body를 자동 변환 (간결함)
+3. 여러 dataclass/BaseModel 파라미터 - 중첩된 객체를 각각 변환
 
 **지원하는 타입:**
 - Python dataclass
-- Pydantic BaseModel (권장)
+- Pydantic BaseModel
 
 ## 기본 사용법
+
+### 패턴 1: RequestBody[T] (명시적)
 
 ```python
 from dataclasses import dataclass
@@ -34,6 +39,76 @@ class UserController:
             "age": body.age,
             "email": body.email,
         }
+```
+
+### 패턴 2: 직접 Dataclass/BaseModel 파라미터 (간결함)
+
+```python
+from dataclasses import dataclass
+from vessel import Controller, Post
+
+@dataclass
+class UserData:
+    username: str
+    age: int
+    email: str
+
+@Controller("/api")
+class UserController:
+    @Post("/users")
+    def create_user(self, user: UserData) -> dict:
+        # RequestBody 없이도 자동 변환됨 (Priority 300)
+        return {
+            "username": user.username,
+            "age": user.age,
+            "email": user.email,
+        }
+```
+
+### 패턴 3: 여러 Dataclass/BaseModel 파라미터 (중첩 객체)
+
+```python
+from dataclasses import dataclass
+from pydantic import BaseModel
+from vessel import Controller, Post
+
+@dataclass
+class FirstData:
+    field1: str
+    field2: int
+
+class SecondData(BaseModel):
+    field3: str
+    field4: float
+
+@Controller("/api")
+class DataController:
+    @Post("/create")
+    def create(self, first: FirstData, second: SecondData) -> dict:
+        # 각 파라미터가 body의 중첩 객체에서 자동 변환됨
+        return {
+            "first_field1": first.field1,
+            "first_field2": first.field2,
+            "second_field3": second.field3,
+            "second_field4": second.field4,
+        }
+```
+
+**요청 (패턴 3):**
+```http
+POST /api/create HTTP/1.1
+Content-Type: application/json
+
+{
+  "first": {
+    "field1": "value1",
+    "field2": 10
+  },
+  "second": {
+    "field3": "value3",
+    "field4": 20.5
+  }
+}
 ```
 
 **요청:**
@@ -288,9 +363,9 @@ class UserController:
 }
 ```
 
-## 개별 필드 vs RequestBody
+## 사용 패턴 비교
 
-### 개별 필드 방식 (기존)
+### 1. 개별 필드 방식 (간단한 경우)
 
 ```python
 @Controller("/api")
@@ -301,11 +376,22 @@ class UserController:
         return {"username": username, "age": age, "email": email}
 ```
 
-### RequestBody 방식 (권장)
+**요청:**
+```json
+{
+  "username": "john",
+  "age": 30,
+  "email": "john@example.com"
+}
+```
+
+### 2. 직접 Dataclass 방식 (권장 - 간결함)
 
 ```python
+from dataclasses import dataclass
+
 @dataclass
-class CreateUserRequest:
+class UserData:
     username: str
     age: int
     email: str
@@ -313,8 +399,34 @@ class CreateUserRequest:
 @Controller("/api")
 class UserController:
     @Post("/users")
-    def create_user(self, body: RequestBody[CreateUserRequest]) -> dict:
-        # 전체 body를 dataclass로 받음
+    def create_user(self, user: UserData) -> dict:
+        # Dataclass로 받음 (RequestBody 불필요)
+        return {
+            "username": user.username,
+            "age": user.age,
+            "email": user.email,
+        }
+```
+
+**요청 (동일):**
+```json
+{
+  "username": "john",
+  "age": 30,
+  "email": "john@example.com"
+}
+```
+
+### 3. RequestBody[T] 방식 (명시적)
+
+```python
+from vessel import RequestBody
+
+@Controller("/api")
+class UserController:
+    @Post("/users")
+    def create_user(self, body: RequestBody[UserData]) -> dict:
+        # RequestBody로 명시적 표현
         return {
             "username": body.username,
             "age": body.age,
@@ -322,27 +434,167 @@ class UserController:
         }
 ```
 
+**요청 (동일):**
+```json
+{
+  "username": "john",
+  "age": 30,
+  "email": "john@example.com"
+}
+```
+
+### 4. 여러 Dataclass 방식 (복잡한 구조)
+
+```python
+@dataclass
+class UserData:
+    username: str
+    age: int
+
+@dataclass
+class AddressData:
+    city: str
+    street: str
+
+@Controller("/api")
+class UserController:
+    @Post("/users")
+    def create_user(self, user: UserData, address: AddressData) -> dict:
+        # 여러 dataclass를 받음
+        return {
+            "username": user.username,
+            "age": user.age,
+            "city": address.city,
+            "street": address.street,
+        }
+```
+
+**요청 (중첩 구조):**
+```json
+{
+  "user": {
+    "username": "john",
+    "age": 30
+  },
+  "address": {
+    "city": "Seoul",
+    "street": "Gangnam"
+  }
+}
+```
+
+## Pydantic 지원
+
+Pydantic BaseModel도 동일하게 지원됩니다:
+
+```python
+from pydantic import BaseModel, Field
+from vessel import Controller, Post
+
+class UserModel(BaseModel):
+    username: str = Field(min_length=3, max_length=20)
+    age: int = Field(ge=0, le=150)
+    email: str
+
+@Controller("/api")
+class UserController:
+    @Post("/users")
+    def create_user(self, user: UserModel) -> dict:
+        # Pydantic의 강력한 검증 기능 활용
+        return {
+            "username": user.username,
+            "age": user.age,
+            "email": user.email,
+        }
+```
+
+**Pydantic 장점:**
+- 더 강력한 검증 (min_length, ge, le 등)
+- 자동 타입 변환
+- 상세한 에러 메시지
+
+## 두 가지 변환 모드
+
+### Nested Mode (중첩 모드)
+
+파라미터 이름이 body의 키로 존재하면 그 값을 사용:
+
+```python
+@dataclass
+class UserData:
+    name: str
+    age: int
+
+@Post("/create")
+def create(self, user: UserData) -> dict:
+    return {"name": user.name}
+```
+
+**요청:**
+```json
+{
+  "user": {
+    "name": "john",
+    "age": 30
+  }
+}
+```
+
+### Flat Mode (평면 모드)
+
+파라미터 이름이 body에 없으면 body 전체를 사용:
+
+```python
+@Post("/create")
+def create(self, user: UserData) -> dict:
+    return {"name": user.name}
+```
+
+**요청:**
+```json
+{
+  "name": "john",
+  "age": 30
+}
+```
+
 ## 장점
 
-1. **타입 안정성**: Dataclass를 사용하여 강력한 타입 체킹
+1. **타입 안정성**: Dataclass/Pydantic을 사용하여 강력한 타입 체킹
 2. **가독성**: 요청 구조가 명확하게 정의됨
-3. **재사용성**: Dataclass를 다른 곳에서도 사용 가능
+3. **재사용성**: Model을 다른 곳에서도 사용 가능
 4. **자동 검증**: 필수 필드와 타입이 자동으로 검증됨
 5. **중첩 구조**: 복잡한 중첩 구조도 쉽게 처리
-6. **문서화**: Dataclass 정의가 곧 API 문서
+6. **문서화**: Model 정의가 곧 API 문서
+7. **유연성**: 세 가지 사용 패턴 지원
+
+## 우선순위 시스템
+
+Parameter Injection 우선순위:
+- 0: HttpRequest
+- 100: HttpHeader
+- 110: HttpCookie
+- **150: RequestBody[T]**
+- 180: Authentication
+- 200: UploadedFile
+- **300: Dataclass (직접 사용)**
+- **310: Pydantic BaseModel (직접 사용)**
+- 999: DefaultValue
 
 ## 주의사항
 
-1. **Dataclass 필수**: `RequestBody`에는 반드시 dataclass를 지정해야 합니다
-2. **타입 힌트 필수**: Dataclass의 모든 필드에 타입 힌트가 있어야 합니다
-3. **직접 인스턴스화 금지**: `RequestBody`를 직접 인스턴스화하지 마세요
+1. **타입 힌트 필수**: 모든 필드에 타입 힌트가 있어야 합니다
+2. **직접 인스턴스화 금지**: `RequestBody`를 직접 인스턴스화하지 마세요
+3. **여러 파라미터 사용 시**: 중첩 구조 필요 (Nested Mode)
 
-## 예제: 실전 활용
+## 실전 예제
+
+### 예제 1: 복잡한 중첩 구조
 
 ```python
 from dataclasses import dataclass, field
 from typing import List, Optional
-from vessel import Controller, Post, RequestBody
+from vessel import Controller, Post
 
 @dataclass
 class Address:
@@ -363,22 +615,22 @@ class CreateUserRequest:
 @Controller("/api")
 class UserController:
     @Post("/users")
-    def create_user(self, body: RequestBody[CreateUserRequest]) -> dict:
-        # 복잡한 구조도 쉽게 처리
+    def create_user(self, user: CreateUserRequest) -> dict:
+        # 복잡한 구조도 쉽게 처리 (RequestBody 생략 가능)
         user_data = {
-            "username": body.username,
-            "email": body.email,
-            "age": body.age,
-            "is_active": body.is_active,
+            "username": user.username,
+            "email": user.email,
+            "age": user.age,
+            "is_active": user.is_active,
             "addresses": [
                 {
                     "street": addr.street,
                     "city": addr.city,
                     "country": addr.country,
                 }
-                for addr in body.addresses
+                for addr in user.addresses
             ],
-            "tags": body.tags,
+            "tags": user.tags,
         }
         
         # DB에 저장하는 로직...
@@ -401,4 +653,140 @@ class UserController:
   ],
   "tags": ["python", "django"]
 }
+```
+
+### 예제 2: Dataclass와 Pydantic 혼합 사용
+
+```python
+from dataclasses import dataclass
+from pydantic import BaseModel, Field
+from vessel import Controller, Post
+
+@dataclass
+class UserBasicInfo:
+    username: str
+    age: int
+
+class UserSettings(BaseModel):
+    theme: str = "light"
+    language: str = Field(default="en", pattern="^(en|ko|ja)$")
+    notifications_enabled: bool = True
+
+@Controller("/api")
+class UserController:
+    @Post("/users/complete")
+    def create_complete_user(
+        self,
+        basic: UserBasicInfo,
+        settings: UserSettings
+    ) -> dict:
+        return {
+            "username": basic.username,
+            "age": basic.age,
+            "theme": settings.theme,
+            "language": settings.language,
+            "notifications": settings.notifications_enabled,
+        }
+```
+
+**요청:**
+```json
+{
+  "basic": {
+    "username": "john",
+    "age": 30
+  },
+  "settings": {
+    "theme": "dark",
+    "language": "ko"
+  }
+}
+```
+
+### 예제 3: 다른 Injector와 함께 사용
+
+```python
+from dataclasses import dataclass
+from vessel import Controller, Post
+from vessel.web.http.injection_types import HttpHeader
+from vessel.web.http.uploaded_file import UploadedFile
+
+@dataclass
+class PostData:
+    title: str
+    content: str
+    tags: List[str]
+
+@Controller("/api")
+class PostController:
+    @Post("/posts")
+    def create_post(
+        self,
+        post: PostData,
+        authorization: HttpHeader["Authorization"],
+        thumbnail: UploadedFile["thumbnail"],
+        notify: bool = False
+    ) -> dict:
+        # 여러 Injector가 함께 작동
+        return {
+            "title": post.title,
+            "content": post.content,
+            "tags": post.tags,
+            "thumbnail": thumbnail.filename,
+            "auth": authorization.value,
+            "notify": notify,
+        }
+```
+
+**요청:**
+```http
+POST /api/posts?notify=true HTTP/1.1
+Authorization: Bearer token123
+Content-Type: multipart/form-data
+
+{
+  "post": {
+    "title": "My Post",
+    "content": "Content here",
+    "tags": ["python", "web"]
+  },
+  "thumbnail": {
+    "filename": "image.jpg",
+    "content": <binary data>,
+    "content_type": "image/jpeg"
+  }
+}
+```
+
+## 정리
+
+### 언제 무엇을 사용할까?
+
+**개별 필드** - 파라미터가 3개 이하이고 단순한 경우:
+```python
+def create(self, name: str, age: int) -> dict:
+```
+
+**직접 Dataclass** - 파라미터가 여러 개이고 재사용이 필요한 경우 (권장):
+```python
+def create(self, user: UserData) -> dict:
+```
+
+**RequestBody[T]** - 의도를 명시적으로 표현하고 싶은 경우:
+```python
+def create(self, body: RequestBody[UserData]) -> dict:
+```
+
+**여러 Dataclass** - 복잡한 구조를 논리적으로 분리하고 싶은 경우:
+```python
+def create(self, user: UserData, settings: SettingsData) -> dict:
+```
+
+**Pydantic** - 강력한 검증이 필요한 경우:
+```python
+class UserModel(BaseModel):
+    email: str = Field(pattern=r"^[\w\.-]+@[\w\.-]+\.\w+$")
+    age: int = Field(ge=0, le=150)
+
+def create(self, user: UserModel) -> dict:
 ```

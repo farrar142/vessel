@@ -7,9 +7,9 @@ from typing import Optional, Annotated
 
 class HttpHeader:
     """
-    HTTP header value object.
+    HTTP header value object for dependency injection.
 
-    When used as a type hint, the framework will inject the corresponding HTTP header value.
+    DO NOT instantiate this class directly. It is created by the framework during injection.
 
     Two usage patterns are supported:
     1. Auto-conversion from parameter name (snake_case -> Title-Case):
@@ -18,7 +18,7 @@ class HttpHeader:
             # user_agent.value -> "Mozilla/5.0 ..."
             pass
 
-    2. Explicit header name specification:
+    2. Explicit header name specification using bracket syntax:
         def get_user(self, agent: HttpHeader["User-Agent"]):
             # agent.name -> "User-Agent"
             # agent.value -> "Mozilla/5.0 ..."
@@ -28,6 +28,9 @@ class HttpHeader:
     def __init__(self, name: str, value: str):
         """
         Initialize HttpHeader with name and value.
+
+        WARNING: This is for internal use only. Do not instantiate directly.
+        Use type hints (HttpHeader or HttpHeader["name"]) in function parameters instead.
 
         Args:
             name: Header name (e.g., "User-Agent", "Content-Type")
@@ -53,9 +56,9 @@ class HttpHeader:
 
 class HttpCookie:
     """
-    HTTP cookie value object.
+    HTTP cookie value object for dependency injection.
 
-    When used as a type hint, the framework will inject the corresponding cookie value.
+    DO NOT instantiate this class directly. It is created by the framework during injection.
 
     Two usage patterns are supported:
     1. Auto-match with parameter name:
@@ -64,7 +67,7 @@ class HttpCookie:
             # session_id.value -> "abc123..."
             pass
 
-    2. Explicit cookie name specification:
+    2. Explicit cookie name specification using bracket syntax:
         def get_user(self, token: HttpCookie["access_token"]):
             # token.name -> "access_token"
             # token.value -> "xyz789..."
@@ -74,6 +77,9 @@ class HttpCookie:
     def __init__(self, name: str, value: str):
         """
         Initialize HttpCookie with name and value.
+
+        WARNING: This is for internal use only. Do not instantiate directly.
+        Use type hints (HttpCookie or HttpCookie["name"]) in function parameters instead.
 
         Args:
             name: Cookie name (e.g., "session_id", "access_token")

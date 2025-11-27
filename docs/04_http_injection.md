@@ -81,22 +81,7 @@ Accept: application/json
 }
 ```
 
-### 명시적 헤더 이름 지정
-
-파라미터 이름과 다른 헤더를 받고 싶다면:
-
-```python
-@Controller("/api")
-class UserController:
-    @Get("/user")
-    def get_user(self, agent: HttpHeader = HttpHeader("User-Agent")) -> dict:
-        return {
-            "header_name": agent.name,    # "User-Agent"
-            "header_value": agent.value
-        }
-```
-
-### 브래킷 문법 (권장)
+### 브래킷 문법 (명시적 헤더 이름 지정)
 
 타입 힌트에 헤더 이름을 포함하는 방식:
 
@@ -111,16 +96,13 @@ class UserController:
         }
 ```
 
-**세 가지 문법 비교:**
+**두 가지 문법 비교:**
 
 ```python
 # 1. 자동 변환 (파라미터 이름 → 헤더 이름)
 def handler(self, user_agent: HttpHeader): ...
 
-# 2. 명시적 지정
-def handler(self, agent: HttpHeader = HttpHeader("User-Agent")): ...
-
-# 3. 브래킷 문법 (가장 명확)
+# 2. 브래킷 문법 (명시적 헤더 이름 지정)
 def handler(self, agent: HttpHeader["User-Agent"]): ...
 ```
 
@@ -132,8 +114,8 @@ class ApiController:
     @Get("/data")
     def get_data(
         self,
-        api_key: HttpHeader = HttpHeader("X-API-Key"),
-        request_id: HttpHeader = HttpHeader("X-Request-ID")
+        api_key: HttpHeader["X-API-Key"],
+        request_id: HttpHeader["X-Request-ID"]
     ) -> dict:
         return {
             "api_key": api_key.value,
@@ -196,20 +178,7 @@ GET /api/preferences HTTP/1.1
 Cookie: session_id=abc123; theme=dark; language=en
 ```
 
-### 명시적 쿠키 이름
-
-```python
-@Controller("/api")
-class UserController:
-    @Get("/user")
-    def get_user(self, sid: HttpCookie = HttpCookie("session_id")) -> dict:
-        return {
-            "cookie_name": sid.name,    # "session_id"
-            "cookie_value": sid.value
-        }
-```
-
-### 브래킷 문법
+### 브래킷 문법 (명시적 쿠키 이름 지정)
 
 ```python
 @Controller("/api")
@@ -232,7 +201,7 @@ from vessel import Controller, Get, HttpHeader, HttpResponse, HttpStatus
 @Controller("/api")
 class SecureController:
     @Get("/data")
-    def get_secure_data(self, api_key: HttpHeader = HttpHeader("X-API-Key")) -> HttpResponse:
+    def get_secure_data(self, api_key: HttpHeader["X-API-Key"]) -> HttpResponse:
         # API 키 검증
         valid_keys = ["key123", "key456"]
         
@@ -409,5 +378,5 @@ class DataController:
 
 3. **보안**: 민감한 정보는 쿠키보다 헤더 사용 권장
    ```python
-   authorization: HttpHeader = HttpHeader("Authorization")
+   authorization: HttpHeader["Authorization"]
    ```

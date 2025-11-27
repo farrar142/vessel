@@ -307,7 +307,7 @@ class AuthController:
         self,
         user_agent: HttpHeader,  # User-Agent 헤더 자동 변환
         access_token: HttpCookie,  # access_token 쿠키
-        auth: HttpHeader = HttpHeader("Authorization"),  # 명시적 이름
+        auth: HttpHeader["Authorization"],  # 브래킷 문법으로 명시적 이름 지정
         session: Optional[HttpCookie] = None  # 선택적 쿠키
     ) -> dict:
         return {

@@ -55,43 +55,55 @@ class DataclassInjector(ParameterInjector):
         """
         Inject dataclass instance from request body.
 
-        Supports two modes:
-        1. Nested mode: param_name exists in request_data as a dict
-           e.g., body = {"user": {"name": "john", "age": 30}}
-           -> def create(self, user: UserData)
+        Only supports nested mode:
+        - param_name must exist in request_data as a dict
+        - e.g., body = {"user": {"name": "john", "age": 30}}
+          -> def create(self, user: UserData)
 
-        2. Flat mode: dataclass fields directly in request_data
-           e.g., body = {"name": "john", "age": 30}
-           -> def create(self, user: UserData)
+        For flat mode (fields directly in body), use RequestBody[T] instead:
+        - e.g., body = {"name": "john", "age": 30}
+          -> def create(self, user: RequestBody[UserData])
 
         Args:
             context: Injection context
 
         Returns:
             Tuple[dataclass_instance, should_remove_from_request_data]
+
+        Raises:
+            ValidationError: If param_name not found in request_data
         """
         model_type = context.param_type
         request_data = context.request_data
         param_name = context.param_name
 
         # Check if param_name exists in request_data as nested object
-        if param_name in request_data:
-            param_value = request_data[param_name]
-            if isinstance(param_value, dict):
-                # Nested mode: use the nested dict
-                instance = self.inject_dataclass(model_type, param_value, param_name)
-                # Remove the nested object from request_data
-                request_data.pop(param_name, None)
-                return instance, False
+        if param_name not in request_data:
+            raise ValidationError(
+                [
+                    {
+                        "field": param_name,
+                        "message": f"Required parameter '{param_name}' not found in request body. "
+                        f"For flat mode (fields directly in body), use RequestBody[{model_type.__name__}] instead.",
+                    }
+                ]
+            )
 
-        # Flat mode: use request_data directly
-        instance = self.inject_dataclass(model_type, request_data, param_name)
+        param_value = request_data[param_name]
+        if not isinstance(param_value, dict):
+            raise ValidationError(
+                [
+                    {
+                        "field": param_name,
+                        "message": f"Parameter '{param_name}' must be a dict/object, got {type(param_value).__name__}",
+                    }
+                ]
+            )
 
-        # Remove all used fields from request_data
-        dataclass_fields_names = [f.name for f in fields(model_type)]
-        for field_name in dataclass_fields_names:
-            request_data.pop(field_name, None)
-
+        # Nested mode: use the nested dict
+        instance = self.inject_dataclass(model_type, param_value, param_name)
+        # Remove the nested object from request_data
+        request_data.pop(param_name, None)
         return instance, False
 
     def inject_dataclass(

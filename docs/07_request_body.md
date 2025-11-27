@@ -41,7 +41,7 @@ class UserController:
         }
 ```
 
-### 패턴 2: 직접 Dataclass/BaseModel 파라미터 (간결함)
+### 패턴 2: 직접 Dataclass/BaseModel 파라미터 (Nested Mode 전용)
 
 ```python
 from dataclasses import dataclass
@@ -57,12 +57,24 @@ class UserData:
 class UserController:
     @Post("/users")
     def create_user(self, user: UserData) -> dict:
-        # RequestBody 없이도 자동 변환됨 (Priority 300)
+        # RequestBody 없이 자동 변환 (Priority 300)
+        # 주의: Nested mode만 지원 (파라미터 이름이 body의 키로 존재해야 함)
         return {
             "username": user.username,
             "age": user.age,
             "email": user.email,
         }
+```
+
+**요청 (Nested mode - user 키 필수):**
+```json
+{
+  "user": {
+    "username": "john",
+    "age": 30,
+    "email": "john@example.com"
+  }
+}
 ```
 
 ### 패턴 3: 여러 Dataclass/BaseModel 파라미터 (중첩 객체)
@@ -385,7 +397,7 @@ class UserController:
 }
 ```
 
-### 2. 직접 Dataclass 방식 (권장 - 간결함)
+### 2. 직접 Dataclass 방식 (Nested mode 전용)
 
 ```python
 from dataclasses import dataclass
@@ -401,6 +413,7 @@ class UserController:
     @Post("/users")
     def create_user(self, user: UserData) -> dict:
         # Dataclass로 받음 (RequestBody 불필요)
+        # 주의: 파라미터 이름이 body의 키로 존재해야 함
         return {
             "username": user.username,
             "age": user.age,
@@ -408,12 +421,14 @@ class UserController:
         }
 ```
 
-**요청 (동일):**
+**요청 (user 키 필수):**
 ```json
 {
-  "username": "john",
-  "age": 30,
-  "email": "john@example.com"
+  "user": {
+    "username": "john",
+    "age": 30,
+    "email": "john@example.com"
+  }
 }
 ```
 
@@ -515,9 +530,9 @@ class UserController:
 
 ## 두 가지 변환 모드
 
-### Nested Mode (중첩 모드)
+### Nested Mode (중첩 모드) - 직접 Dataclass/Pydantic 사용
 
-파라미터 이름이 body의 키로 존재하면 그 값을 사용:
+직접 dataclass/Pydantic 파라미터는 **반드시 nested mode로만 작동**합니다:
 
 ```python
 @dataclass
@@ -530,7 +545,7 @@ def create(self, user: UserData) -> dict:
     return {"name": user.name}
 ```
 
-**요청:**
+**요청 (파라미터 이름과 일치하는 키 필수):**
 ```json
 {
   "user": {
@@ -540,23 +555,25 @@ def create(self, user: UserData) -> dict:
 }
 ```
 
-### Flat Mode (평면 모드)
+### Flat Mode (평면 모드) - RequestBody[T] 사용
 
-파라미터 이름이 body에 없으면 body 전체를 사용:
+Flat mode를 사용하려면 **반드시 `RequestBody[T]`를 사용**해야 합니다:
 
 ```python
 @Post("/create")
-def create(self, user: UserData) -> dict:
+def create(self, user: RequestBody[UserData]) -> dict:
     return {"name": user.name}
 ```
 
-**요청:**
+**요청 (파라미터 이름 없이 필드 직접):**
 ```json
 {
   "name": "john",
   "age": 30
 }
 ```
+
+**중요:** 직접 dataclass/Pydantic 파라미터로 flat mode를 시도하면 400 에러가 발생합니다.
 
 ## 장점
 
@@ -765,21 +782,28 @@ Content-Type: multipart/form-data
 **개별 필드** - 파라미터가 3개 이하이고 단순한 경우:
 ```python
 def create(self, name: str, age: int) -> dict:
+# body: {"name": "john", "age": 30}
 ```
 
-**직접 Dataclass** - 파라미터가 여러 개이고 재사용이 필요한 경우 (권장):
+**RequestBody[T] (Flat mode)** - 필드를 직접 body에 넣고 싶은 경우 (권장):
+```python
+def create(self, user: RequestBody[UserData]) -> dict:
+# body: {"username": "john", "age": 30, "email": "..."}
+```
+
+**직접 Dataclass (Nested mode)** - 파라미터 이름으로 그룹화하고 싶은 경우:
 ```python
 def create(self, user: UserData) -> dict:
+# body: {"user": {"username": "john", "age": 30, "email": "..."}}
 ```
 
-**RequestBody[T]** - 의도를 명시적으로 표현하고 싶은 경우:
-```python
-def create(self, body: RequestBody[UserData]) -> dict:
-```
-
-**여러 Dataclass** - 복잡한 구조를 논리적으로 분리하고 싶은 경우:
+**여러 Dataclass (Nested mode)** - 복잡한 구조를 논리적으로 분리하고 싶은 경우:
 ```python
 def create(self, user: UserData, settings: SettingsData) -> dict:
+# body: {
+#   "user": {"username": "john", ...},
+#   "settings": {"theme": "dark", ...}
+# }
 ```
 
 **Pydantic** - 강력한 검증이 필요한 경우:
@@ -788,5 +812,17 @@ class UserModel(BaseModel):
     email: str = Field(pattern=r"^[\w\.-]+@[\w\.-]+\.\w+$")
     age: int = Field(ge=0, le=150)
 
+# RequestBody[T] for flat mode
+def create(self, user: RequestBody[UserModel]) -> dict:
+# body: {"email": "...", "age": 30}
+
+# Direct parameter for nested mode
 def create(self, user: UserModel) -> dict:
+# body: {"user": {"email": "...", "age": 30}}
 ```
+
+### 핵심 규칙
+
+1. **Flat mode = RequestBody[T]**: 필드를 body에 직접 넣으려면 `RequestBody[T]` 사용
+2. **Nested mode = 직접 파라미터**: 파라미터 이름으로 그룹화하려면 직접 dataclass/Pydantic 사용
+3. **여러 모델 = 반드시 Nested**: 여러 dataclass/Pydantic 파라미터는 항상 nested mode

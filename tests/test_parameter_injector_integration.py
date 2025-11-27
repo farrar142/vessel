@@ -608,6 +608,95 @@ class TestParameterInjectorIntegration:
 class TestParameterInjectorEdgeCases:
     """ParameterInjector 엣지 케이스 테스트"""
 
+    def test_dataclass_flat_mode_not_supported(self):
+        """직접 dataclass 파라미터는 flat mode를 지원하지 않음"""
+
+        @dataclass
+        class UserData:
+            username: str
+            age: int
+
+        @Controller("/api")
+        class UserController:
+            @Post("/users")
+            def create_user(self, user: UserData) -> dict:
+                return {"username": user.username, "age": user.age}
+
+        app = Application("__main__")
+        app.initialize()
+
+        # Flat mode 시도 - body에 user 키가 없고 필드들만 있음
+        request = HttpRequest(
+            method="POST",
+            path="/api/users",
+            body={"username": "john", "age": 30},  # user 키 없음
+        )
+        response = app.handle_request(request)
+
+        # 400 에러 발생해야 함
+        assert response.status_code == 400
+        assert "user" in response.body.get("details", [{}])[0].get("field", "")
+        assert "RequestBody" in response.body.get("details", [{}])[0].get("message", "")
+
+    def test_pydantic_flat_mode_not_supported(self):
+        """직접 Pydantic 파라미터는 flat mode를 지원하지 않음"""
+
+        class UserModel(BaseModel):
+            username: str
+            age: int
+
+        @Controller("/api")
+        class UserController:
+            @Post("/users")
+            def create_user(self, user: UserModel) -> dict:
+                return {"username": user.username, "age": user.age}
+
+        app = Application("__main__")
+        app.initialize()
+
+        # Flat mode 시도
+        request = HttpRequest(
+            method="POST",
+            path="/api/users",
+            body={"username": "john", "age": 30},  # user 키 없음
+        )
+        response = app.handle_request(request)
+
+        # 400 에러 발생해야 함
+        assert response.status_code == 400
+        assert "user" in response.body.get("details", [{}])[0].get("field", "")
+        assert "RequestBody" in response.body.get("details", [{}])[0].get("message", "")
+
+    def test_request_body_supports_flat_mode(self):
+        """RequestBody[T]는 flat mode를 지원함"""
+
+        @dataclass
+        class UserData:
+            username: str
+            age: int
+
+        @Controller("/api")
+        class UserController:
+            @Post("/users")
+            def create_user(self, body: RequestBody[UserData]) -> dict:
+                return {"username": body.username, "age": body.age}
+
+        app = Application("__main__")
+        app.initialize()
+
+        # Flat mode - RequestBody[T]로는 작동해야 함
+        request = HttpRequest(
+            method="POST",
+            path="/api/users",
+            body={"username": "john", "age": 30},  # body 키 없이 직접
+        )
+        response = app.handle_request(request)
+
+        # 성공해야 함
+        assert response.status_code == 200
+        assert response.body["username"] == "john"
+        assert response.body["age"] == 30
+
     def test_empty_request_body(self):
         """빈 request body 처리"""
 

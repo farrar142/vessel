@@ -340,6 +340,89 @@ class DataController:
             )
 ```
 
+## Optional 지원
+
+헤더와 쿠키는 `Optional` 타입으로 선언할 수 있습니다:
+
+### Optional HttpHeader
+
+```python
+from typing import Optional
+from vessel import Controller, Get, HttpHeader
+
+@Controller("/api")
+class UserController:
+    @Get("/user")
+    def get_user(self, authorization: Optional[HttpHeader]) -> dict:
+        if authorization:
+            return {
+                "auth": authorization.value,
+                "name": authorization.name
+            }
+        return {"auth": None}
+```
+
+**요청 (헤더 없음):**
+```http
+GET /api/user HTTP/1.1
+```
+
+**응답:**
+```json
+{
+  "auth": null
+}
+```
+
+**요청 (헤더 있음):**
+```http
+GET /api/user HTTP/1.1
+Authorization: Bearer token123
+```
+
+**응답:**
+```json
+{
+  "auth": "Bearer token123",
+  "name": "Authorization"
+}
+```
+
+### Optional HttpCookie
+
+```python
+@Controller("/api")
+class UserController:
+    @Get("/user")
+    def get_user(self, remember_me: Optional[HttpCookie]) -> dict:
+        if remember_me:
+            return {
+                "value": remember_me.value,
+                "name": remember_me.name
+            }
+        return {"value": None}
+```
+
+### Optional with 브래킷 문법
+
+```python
+@Controller("/api")
+class SecureController:
+    @Get("/data")
+    def get_data(
+        self, 
+        auth: Optional[HttpHeader["Authorization"]]
+    ) -> dict:
+        if auth:
+            return {"authenticated": True, "token": auth.value}
+        return {"authenticated": False}
+```
+
+**중요:**
+- 값이 없을 때 `None`이 주입됩니다
+- `if` 문으로 존재 여부를 확인하세요
+- 기본값(`= None`)은 선택 사항입니다 (없어도 작동)
+
 ## 정리
 
 ### 지원하는 기능
@@ -350,33 +433,59 @@ class DataController:
 - ✅ 브래킷 문법
 - ✅ 여러 헤더 동시 주입
 - ✅ 커스텀 헤더 지원
+- ✅ Optional 타입 지원
 
 **HttpCookie:**
 - ✅ 자동 쿠키 이름 매칭
 - ✅ 명시적 쿠키 이름 지정
 - ✅ 브래킷 문법
 - ✅ 여러 쿠키 동시 주입
+- ✅ Optional 타입 지원
+
+### 필수 vs Optional
+
+```python
+# 필수 헤더 - 없으면 400 에러
+def handler(self, authorization: HttpHeader): ...
+
+# 선택적 헤더 - 없으면 None (기본값은 선택 사항)
+def handler(self, authorization: Optional[HttpHeader]): ...
+```
 
 ### 지원하지 않는 기능
 
-- ❌ Optional 헤더/쿠키 (모든 헤더/쿠키는 필수)
-- ❌ 기본값 지정
 - ❌ 헤더/쿠키 값의 자동 타입 변환 (모두 str)
 
 ### 권장 사항
 
-1. **브래킷 문법 사용**: 가장 명확하고 타입 안전
+1. **필수 vs Optional 명확히 구분**
+   ```python
+   # 필수 - 인증이 반드시 필요한 경우
+   authorization: HttpHeader["Authorization"]
+   
+   # 선택적 - 있으면 사용하고 없어도 괜찮은 경우
+   theme: Optional[HttpCookie]
+   ```
+
+2. **브래킷 문법 사용**: 가장 명확하고 타입 안전
    ```python
    agent: HttpHeader["User-Agent"]
    ```
 
-2. **검증 추가**: 헤더/쿠키 값은 항상 검증
+3. **Optional은 기본값 선택 사항**
    ```python
-   if not api_key.value:
-       return error_response()
+   # 둘 다 가능
+   auth: Optional[HttpHeader]
+   auth: Optional[HttpHeader] = None
    ```
 
-3. **보안**: 민감한 정보는 쿠키보다 헤더 사용 권장
+4. **검증 추가**: 헤더/쿠키 값은 항상 검증
+   ```python
+   if authorization and authorization.value:
+       # 처리
+   ```
+
+5. **보안**: 민감한 정보는 쿠키보다 헤더 사용 권장
    ```python
    authorization: HttpHeader["Authorization"]
    ```
